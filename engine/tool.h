@@ -28,10 +28,7 @@ static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
 }
 
 //! uniform layout
-#define descriptor_layout_binding(binding,descriptorType,stageFlags)\
-static VkDescriptorSetLayoutBinding getLayoutBinding() {\
-	return {binding,descriptorType,1,stageFlags,nullptr};\
-}
+#define descriptor_layout_binding(binding,descriptorType,stageFlags) {binding,descriptorType,1,stageFlags,nullptr}
 
 //! type
 #define is_type(instance,type) (typeid(instance).hash_code() == typeid(type).hash_code())

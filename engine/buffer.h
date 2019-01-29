@@ -58,6 +58,9 @@ namespace qb {
 		VkDeviceSize descriptorRange = 0;
 		std::vector<VkDescriptorBufferInfo> descriptorBufferInfos{};
 		std::vector<VkDeviceMemory> mems{};
+	private:
+		VkCommandBuffer _beginOnce();
+		void _endOnce(VkCommandBuffer cmdBuf);
 	public:
 		void init(App* app, std::string name);
 		
@@ -71,23 +74,35 @@ namespace qb {
 
 		inline VkBuffer& buffer(int i = 0) { return buffers[i]; };
 		inline VkDeviceMemory& mem(int i = 0) { return mems[i]; };
+
+		void copyToImage(Image* img);
 	};
 
 	class Image {
 	private:
 		App* app;
 		std::string name;
+		Buffer* stageBuffer;
 	public:
 		VkImageCreateInfo imageInfo{};
+		VkImageViewCreateInfo viewInfo{};
+		VkSamplerCreateInfo samplerInfo{};
 		VkImage image = VK_NULL_HANDLE;
+		VkImageLayout imgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		VkImageView view = VK_NULL_HANDLE;
-		VkDeviceMemory mem;
-		gli::texture* tex;
+		VkSampler sampler = VK_NULL_HANDLE;
+		VkDeviceMemory mem = VK_NULL_HANDLE;
+		gli::texture* tex = nullptr;
+		VkDescriptorImageInfo descriptorImageInfo = {};
+	private:
+		void _buildTex2d();
 	public:
 		void init(App* app, std::string name);
 
 		void build();
 
 		void destroy();
+
+		VkDescriptorSetLayoutBinding getLayoutBinding(uint32_t binding, VkShaderStageFlags stageFlags);
 	};
 };

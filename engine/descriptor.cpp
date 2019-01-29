@@ -69,8 +69,8 @@ void qb::Descriptor::build(){
 	vk_check(vkAllocateDescriptorSets(app->device.logical, &allocInfo, descriptorSets.data()));
 
 	// descriptor buffer/image info
-	std::vector<Buffer*> buffers(bindings.size());
-	transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) -> Buffer* {return v.second; });
+	std::vector<std::any> buffers(bindings.size());
+	transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) -> std::any {return v.second; });
 	size_t bufferCount = buffers.size();
 	for (size_t i = 0; i < app->swapchain.views.size(); i++) {
 		std::vector<VkWriteDescriptorSet> writeSets(bufferCount);
@@ -82,8 +82,8 @@ void qb::Descriptor::build(){
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.descriptorType = layoutBindings[j].descriptorType;
-			descriptorWrite.pBufferInfo = descriptorWrite.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? &buffers[j]->descriptorBufferInfos[i] : nullptr;
-			descriptorWrite.pImageInfo = nullptr; // TODO
+			descriptorWrite.pBufferInfo = descriptorWrite.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? &std::any_cast<Buffer*>(buffers[j])->descriptorBufferInfos[i] : nullptr;
+			descriptorWrite.pImageInfo = descriptorWrite.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ? &std::any_cast<Image*>(buffers[j])->descriptorImageInfo : nullptr;
 			descriptorWrite.pTexelBufferView = nullptr; // TODO
 		}
 		vkUpdateDescriptorSets(app->device.logical, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);

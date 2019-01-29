@@ -9,6 +9,7 @@
 #include <algorithm>
 namespace qb {
 	class App;
+	class Image;
 	class Sync {
 	public:
 		App *app;
@@ -22,6 +23,14 @@ namespace qb {
 		Sync() = default;
 
 		void init(App *app);
+
+		void setImageLayout(
+			VkCommandBuffer cmdBuf,
+			Image* image,
+			VkImageLayout newImageLayout,
+			VkPipelineStageFlags srcStageMask,
+			VkPipelineStageFlags dstStageMask);
+
 
 		void destroy();
 	};

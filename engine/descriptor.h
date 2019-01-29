@@ -33,7 +33,7 @@ namespace qb {
 	public:
 		App* app;
 		std::string name;
-		std::vector<std::pair<VkDescriptorSetLayoutBinding,Buffer*>> bindings{};
+		std::vector<std::pair<VkDescriptorSetLayoutBinding,std::any>> bindings{};
 		VkDescriptorSetLayout layout;
 		std::vector<VkDescriptorSet> descriptorSets;
 	public:

@@ -113,7 +113,20 @@ VkDeviceMemory&& qb::Device::allocBufferMemory(VkBuffer buffer, VkMemoryProperty
 	VkDeviceMemory mem;
 	vk_check(vkAllocateMemory(logical, &allocInfo, nullptr, &mem));
 	vkBindBufferMemory(logical, buffer, mem, 0);
-	return std::move(mem);
+	return std::forward<VkDeviceMemory>(mem);
+}
+
+VkDeviceMemory&& qb::Device::allocImageMemory(VkImage image, VkMemoryPropertyFlags properties){
+	VkMemoryRequirements memRequirements;
+	vkGetImageMemoryRequirements(logical, image, &memRequirements);
+	VkMemoryAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex = _findMemoryType(memRequirements.memoryTypeBits, properties);
+	VkDeviceMemory mem;
+	vk_check(vkAllocateMemory(logical, &allocInfo, nullptr, &mem));
+	vkBindImageMemory(logical, image, mem, 0);
+	return std::forward<VkDeviceMemory>(mem);
 }
 
 uint32_t qb::Device::_findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {

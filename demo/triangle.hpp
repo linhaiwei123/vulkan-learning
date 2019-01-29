@@ -3,10 +3,12 @@
 struct Vertex {
 	glm::vec2 pos;
 	glm::vec3 color;
+	glm::vec2 texCoord;
 	vertex_binding_desc(0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
 	vertex_attrib_desc(
 		{ 0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, pos) },
 		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) },
+		{2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord)}
 		);
 };
 
@@ -14,7 +16,6 @@ struct Uniform {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
-	descriptor_layout_binding(0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,VK_SHADER_STAGE_VERTEX_BIT);
 };
 
 class Triangle : public qb::App {
@@ -32,10 +33,10 @@ class Triangle : public qb::App {
 	virtual void onInit() {
 		// vertex
 		std::vector<Vertex> vertices = {
-			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-			{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-			{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-			{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+			{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+			{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+			{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+			{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 		};
 		vertexBuf = this->bufferMgr.getBuffer("vertexBuf");
 		vertexBuf->bufferInfo.size = sizeof(Vertex) * vertices.size();
@@ -58,14 +59,17 @@ class Triangle : public qb::App {
 		uniBuf->bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 		uniBuf->descriptorRange = sizeof(Uniform);
 		uniBuf->buildPerSwapchainImg();
-		descriptor = this->descriptorMgr.getDescriptor("descriptor");
-		descriptor->bindings = {
-			{Uniform::getLayoutBinding(), uniBuf}
-		};
-		descriptor->build();
 		// image
 		img = this->bufferMgr.getImage("img");
-		img->tex = this->bufferMgr.getTex("./textures/girl.dds");
+		img->tex = this->bufferMgr.getTex("./textures/texture.dds");
+		img->build();
+		// descriptor
+		descriptor = this->descriptorMgr.getDescriptor("descriptor");
+		descriptor->bindings = {
+			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf},
+			{img->getLayoutBinding(1, VK_SHADER_STAGE_FRAGMENT_BIT), img}
+		};
+		descriptor->build();
 		// render pass
 		renderPass = this->renderPassMgr.getRenderPass("renderPass");
 		renderPass->build();

@@ -48,5 +48,6 @@ namespace qb {
 		void destroy();
 
 		VkDeviceMemory&& allocBufferMemory(VkBuffer buffer, VkMemoryPropertyFlags properties);
+		VkDeviceMemory&& allocImageMemory(VkImage image, VkMemoryPropertyFlags properties);
 	};
 };

@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "app.h"
+#include <vulkan/vulkan_core.h>
 
 void qb::BufferMgr::init(App * app) {
 	this->app = app;
@@ -79,6 +80,13 @@ void qb::BufferMgr::destroy() {
 	//texture2d destroy
 	for (auto&it : _texMap)
 		delete it.second;
+
+	//image destroy
+	for (auto&it : _imageMap) {
+		it.second->destroy();
+		delete it.second;
+	}
+		
 }
 
 qb::Buffer * qb::BufferMgr::getBuffer(std::string name) {
@@ -174,15 +182,168 @@ void qb::Buffer::destroy() {
 		vkFreeMemory(app->device.logical, mem, nullptr);
 }
 
+VkCommandBuffer qb::Buffer::_beginOnce() {
+	VkCommandBufferAllocateInfo allocInfo = {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = app->bufferMgr.commandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer cmdBuf;
+	vkAllocateCommandBuffers(app->device.logical, &allocInfo, &cmdBuf);
+
+	VkCommandBufferBeginInfo beginInfo = {};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	vkBeginCommandBuffer(cmdBuf, &beginInfo);
+
+	return std::forward<VkCommandBuffer>(cmdBuf);
+}
+
+void qb::Buffer::_endOnce(VkCommandBuffer cmdBuf) {
+	vkEndCommandBuffer(cmdBuf);
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmdBuf;
+
+	vkQueueSubmit(app->device.queues.graphics, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(app->device.queues.graphics);
+
+	vkFreeCommandBuffers(app->device.logical, app->bufferMgr.commandPool, 1, &cmdBuf);
+}
+
+void qb::Buffer::copyToImage(Image * img){
+	assert(img != nullptr);
+	gli::texture* tex = img->tex;
+	assert(tex != nullptr);
+	// copy buffer to image
+	std::vector<VkBufferImageCopy> bufferCopyRegions(static_cast<uint32_t>(tex->levels()));
+	uint32_t offset = 0;
+	for (uint32_t i = 0; i < bufferCopyRegions.size(); i++) {
+		VkBufferImageCopy& bufferCopyRegion = bufferCopyRegions[i];
+		bufferCopyRegion.imageSubresource.aspectMask = img->viewInfo.subresourceRange.aspectMask;
+		bufferCopyRegion.imageSubresource.mipLevel = i;
+		bufferCopyRegion.imageSubresource.baseArrayLayer = static_cast<uint32_t>(tex->base_layer());
+		bufferCopyRegion.imageSubresource.layerCount = static_cast<uint32_t>(tex->layers());
+		bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex->extent(i).x);
+		bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex->extent(i).y);
+		bufferCopyRegion.imageExtent.depth = static_cast<uint32_t>(tex->extent(i).z);
+		bufferCopyRegion.bufferOffset = offset;
+		offset += static_cast<uint32_t>(tex->size(i));
+	}
+
+	// begin cmd
+	VkCommandBuffer cmdBuf = this->_beginOnce();
+	app->sync.setImageLayout(cmdBuf, img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+	vkCmdCopyBufferToImage(cmdBuf, this->buffer(), img->image, img->imgLayout, static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
+	app->sync.setImageLayout(cmdBuf, img, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	// end cmd
+	this->_endOnce(cmdBuf);
+}
+
 void qb::Image::init(App * app, std::string name){
 	this->app = app;
 	this->name = name;
+	this->stageBuffer = app->bufferMgr.getBuffer("$tex_" + name);
 }
 
 void qb::Image::build(){
+	assert(tex != nullptr);
+	gli::texture::target_type target = tex->target();
+	switch (target) {
+	case gli::texture::target_type::TARGET_2D:
+		this->_buildTex2d();
+		break;
+	default:
+		log_error("not build handle support texture type: %d", target);
+		assert(0);
+	}
+}
 
+void qb::Image::_buildTex2d() {
+	// image
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent = {
+		static_cast<uint32_t>(tex->extent(0).x),
+		static_cast<uint32_t>(tex->extent(0).y),
+		static_cast<uint32_t>(tex->extent(0).z),
+	};
+	imageInfo.mipLevels = static_cast<uint32_t>(tex->levels());
+	imageInfo.arrayLayers = static_cast<uint32_t>(tex->layers());
+	imageInfo.format = static_cast<VkFormat>(tex->format());
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.initialLayout = imgLayout;
+	imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.flags = 0;
+	vk_check(vkCreateImage(app->device.logical, &imageInfo, nullptr, &image));
+	// memory
+	mem = app->device.allocImageMemory(image,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	// view
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = imageInfo.format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = static_cast<uint32_t>(tex->base_level());
+	viewInfo.subresourceRange.levelCount = static_cast<uint32_t>(tex->levels());
+	viewInfo.subresourceRange.baseArrayLayer = static_cast<uint32_t>(tex->base_layer());
+	viewInfo.subresourceRange.layerCount = static_cast<uint32_t>(tex->layers());
+
+	vk_check(vkCreateImageView(app->device.logical, &viewInfo, nullptr, &view));
+
+	// stage buffer
+	this->stageBuffer->bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	this->stageBuffer->bufferInfo.size = tex->size();
+	this->stageBuffer->build();
+	this->stageBuffer->mapping(tex->data());
+	this->stageBuffer->copyToImage(this);
+
+	// sampler
+	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	samplerInfo.magFilter = VK_FILTER_LINEAR;
+	samplerInfo.minFilter = VK_FILTER_LINEAR;
+	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	samplerInfo.mipLodBias = 0.0f;
+	samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
+	samplerInfo.minLod = 0.0f;
+	samplerInfo.maxLod = static_cast<float>(tex->levels());
+	samplerInfo.maxAnisotropy = 1.0;
+	samplerInfo.anisotropyEnable = VK_FALSE;
+	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	vk_check(vkCreateSampler(app->device.logical, &samplerInfo, nullptr, &sampler));
+
+	// descriptor image info
+	descriptorImageInfo.imageLayout = imgLayout;
+	descriptorImageInfo.imageView = view;
+	descriptorImageInfo.sampler = sampler;
 }
 
 void qb::Image::destroy(){
+	vkDestroyImageView(app->device.logical, view, nullptr);
+	vkDestroyImage(app->device.logical, image, nullptr);
+	vkDestroySampler(app->device.logical, sampler, nullptr);
+	vkFreeMemory(app->device.logical, mem, nullptr);
+}
 
+VkDescriptorSetLayoutBinding qb::Image::getLayoutBinding(uint32_t binding, VkShaderStageFlags stageFlags){
+	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
+	samplerLayoutBinding.binding = binding;
+	samplerLayoutBinding.descriptorCount = 1;
+	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	samplerLayoutBinding.pImmutableSamplers = nullptr;
+	samplerLayoutBinding.stageFlags = stageFlags;
+	return samplerLayoutBinding;
 }
