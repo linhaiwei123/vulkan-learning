@@ -97,6 +97,15 @@ void qb::Device::init(App* app) {
 	vkGetDeviceQueue(logical, queueFamilyIndices.graphics.value(), 0, &queues.graphics);
 	// present queue
 	vkGetDeviceQueue(logical, queueFamilyIndices.present.value(), 0, &queues.present);
+
+	//depth format
+	for (VkFormat depthFormat : {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}) {
+		VkFormatProperties props;
+		vkGetPhysicalDeviceFormatProperties(physical, depthFormat, &props);
+		if ((props.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) == VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+			this->depthFormat = depthFormat;
+		}
+	}
 }
 
 void qb::Device::destroy() {

@@ -50,7 +50,7 @@ namespace qb {
 		VkPipelineDynamicStateCreateInfo dynamicState{};
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages{};
-
+		VkPipelineDepthStencilStateCreateInfo depthStencil = {};
 		VkPipelineLayout layout = VK_NULL_HANDLE;
 		VkPipeline pipeline = VK_NULL_HANDLE;
 		VkRenderPass renderPass = VK_NULL_HANDLE;

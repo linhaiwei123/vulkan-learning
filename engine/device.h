@@ -38,6 +38,7 @@ namespace qb {
 			VkQueue graphics;
 			VkQueue present;
 		} queues;
+		VkFormat depthFormat;
 	private:
 		uint32_t _findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	public:

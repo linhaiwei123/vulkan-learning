@@ -40,13 +40,17 @@ void qb::RenderPass::init(App * app, std::string name) {
 	VkAttachmentReference colorAttachmentRef = {};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	this->attachmentRefs.push_back(colorAttachmentRef);
+	this->attachmentRefs = { {} };
+	this->attachmentRefs[0].push_back(colorAttachmentRef);
 	// sub pass
 	VkSubpassDescription subpass = {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &this->attachmentRefs.at(0);
+	subpass.pColorAttachments = &this->attachmentRefs[0][0];
 	this->subpassDescs.push_back(subpass);
+}
+
+void qb::RenderPass::build() {
 	// render pass
 	renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -54,25 +58,23 @@ void qb::RenderPass::init(App * app, std::string name) {
 	renderPassInfo.pAttachments = attachmentDescs.data();
 	renderPassInfo.subpassCount = static_cast<uint32_t>(subpassDescs.size());
 	renderPassInfo.pSubpasses = subpassDescs.data();
-}
 
-void qb::RenderPass::build() {
 	vk_check(vkCreateRenderPass(app->device.logical, &renderPassInfo, nullptr, &renderPass));
 }
 
 void qb::RenderPass::begin(size_t i){
-	VkRenderPassBeginInfo renderPassInfo = {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = app->bufferMgr.framebuffers[i];
-	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = app->swapchain.extent;
+	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.renderPass = renderPass;
+	renderPassBeginInfo.framebuffer = app->bufferMgr.framebuffers[i];
+	renderPassBeginInfo.renderArea.offset = { 0, 0 };
+	renderPassBeginInfo.renderArea.extent = app->swapchain.extent;
 
-	VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-	renderPassInfo.clearValueCount = 1;
-	renderPassInfo.pClearValues = &clearColor;
+	assert(this->clearValues.size() == renderPassInfo.attachmentCount);
+	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(this->clearValues.size());
+	renderPassBeginInfo.pClearValues = this->clearValues.data();
 
-	vkCmdBeginRenderPass(app->bufferMgr.commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(app->bufferMgr.commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void qb::RenderPass::end(size_t i){

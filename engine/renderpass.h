@@ -32,8 +32,9 @@ namespace qb {
 		VkRenderPassCreateInfo renderPassInfo;
 		VkRenderPass renderPass;
 		std::vector<VkAttachmentDescription> attachmentDescs{};
-		std::vector<VkAttachmentReference> attachmentRefs{};
+		std::vector<std::vector<VkAttachmentReference>> attachmentRefs{};
 		std::vector<VkSubpassDescription> subpassDescs{};
+		std::vector<VkClearValue> clearValues{};
 	public:
 		RenderPass() = default;
 		

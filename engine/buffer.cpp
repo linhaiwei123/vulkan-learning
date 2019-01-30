@@ -32,9 +32,12 @@ void qb::BufferMgr::build() {
 	framebuffers.resize(app->swapchain.views.size());
 	// frame buffer create
 	for (size_t i = 0; i < framebuffers.size(); i++) {
-		std::vector<VkImageView> attachments = {  //TODO separate attachments binding
-			app->swapchain.views[i]
-		};
+		//std::vector<VkImageView> attachments = {  //TODO separate attachments binding
+		//	app->swapchain.views[i]
+		//};
+		assert(onAttachments != nullptr);
+		std::vector<VkImageView> attachments = onAttachments(i);
+		assert(attachments.size() != 0);
 		VkFramebufferCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		createInfo.renderPass = renderPass;
@@ -182,7 +185,7 @@ void qb::Buffer::destroy() {
 		vkFreeMemory(app->device.logical, mem, nullptr);
 }
 
-VkCommandBuffer qb::Buffer::_beginOnce() {
+VkCommandBuffer qb::BufferMgr::beginOnce() {
 	VkCommandBufferAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -201,7 +204,7 @@ VkCommandBuffer qb::Buffer::_beginOnce() {
 	return std::forward<VkCommandBuffer>(cmdBuf);
 }
 
-void qb::Buffer::_endOnce(VkCommandBuffer cmdBuf) {
+void qb::BufferMgr::endOnce(VkCommandBuffer cmdBuf) {
 	vkEndCommandBuffer(cmdBuf);
 
 	VkSubmitInfo submitInfo = {};
@@ -236,14 +239,14 @@ void qb::Buffer::copyToImage(Image * img){
 	}
 
 	// begin cmd
-	VkCommandBuffer cmdBuf = this->_beginOnce();
+	VkCommandBuffer cmdBuf = this->app->bufferMgr.beginOnce();
 	app->sync.setImageLayout(cmdBuf, img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 	vkCmdCopyBufferToImage(cmdBuf, this->buffer(), img->image, img->imgLayout, static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
 	app->sync.setImageLayout(cmdBuf, img, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 	// end cmd
-	this->_endOnce(cmdBuf);
+	this->app->bufferMgr.endOnce(cmdBuf);
 }
 
 void qb::Image::init(App * app, std::string name){
@@ -263,6 +266,47 @@ void qb::Image::build(){
 		log_error("not build handle support texture type: %d", target);
 		assert(0);
 	}
+}
+
+void qb::Image::buildDepth(){
+	// image
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent = {
+		static_cast<uint32_t>(this->app->swapchain.extent.width),
+		static_cast<uint32_t>(this->app->swapchain.extent.height),
+		1,
+	};
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	imageInfo.format = this->app->device.depthFormat;
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.initialLayout = imgLayout;
+	imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.flags = 0;
+	vk_check(vkCreateImage(app->device.logical, &imageInfo, nullptr, &image));
+	// memory
+	mem = app->device.allocImageMemory(image,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	// view
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = imageInfo.format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT|VK_IMAGE_ASPECT_STENCIL_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	vk_check(vkCreateImageView(app->device.logical, &viewInfo, nullptr, &view));
+
+	auto cmdBuf = this->app->bufferMgr.beginOnce();
+	this->app->sync.setImageLayout(cmdBuf, this, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+	this->app->bufferMgr.endOnce(cmdBuf);
 }
 
 void qb::Image::_buildTex2d() {

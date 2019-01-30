@@ -27,6 +27,7 @@ namespace qb {
 		VkRenderPassCreateInfo renderPassCreateInfo{};
 		VkRenderPass renderPass = VK_NULL_HANDLE;
 		VkCommandPool commandPool = VK_NULL_HANDLE;
+		std::function<std::vector<VkImageView>(size_t i)> onAttachments = nullptr;
 	public:
 		BufferMgr() = default;
 
@@ -37,6 +38,10 @@ namespace qb {
 		void begin(size_t i);
 
 		void end(size_t i);
+
+		VkCommandBuffer beginOnce();
+
+		void endOnce(VkCommandBuffer cmdBuf);
 
 		void destroy();
 
@@ -58,9 +63,6 @@ namespace qb {
 		VkDeviceSize descriptorRange = 0;
 		std::vector<VkDescriptorBufferInfo> descriptorBufferInfos{};
 		std::vector<VkDeviceMemory> mems{};
-	private:
-		VkCommandBuffer _beginOnce();
-		void _endOnce(VkCommandBuffer cmdBuf);
 	public:
 		void init(App* app, std::string name);
 		
@@ -100,6 +102,8 @@ namespace qb {
 		void init(App* app, std::string name);
 
 		void build();
+
+		void buildDepth();
 
 		void destroy();
 
