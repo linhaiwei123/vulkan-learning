@@ -307,6 +307,59 @@ void qb::Image::buildDepth(){
 	auto cmdBuf = this->app->bufferMgr.beginOnce();
 	this->app->sync.setImageLayout(cmdBuf, this, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 	this->app->bufferMgr.endOnce(cmdBuf);
+
+	// descriptor image info
+	descriptorImageInfo.imageLayout = imgLayout;
+	descriptorImageInfo.imageView = view;
+	descriptorImageInfo.sampler = VK_NULL_HANDLE;
+
+}
+
+void qb::Image::buildColorAttach(){
+	// image
+	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	imageInfo.imageType = VK_IMAGE_TYPE_2D;
+	imageInfo.extent = {
+		static_cast<uint32_t>(this->app->swapchain.extent.width),
+		static_cast<uint32_t>(this->app->swapchain.extent.height),
+		1,
+	};
+	imageInfo.mipLevels = 1;
+	imageInfo.arrayLayers = 1;
+	assert(imageInfo.format != VK_FORMAT_MAX_ENUM);
+	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	imageInfo.initialLayout = imgLayout;
+	imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	imageInfo.flags = 0;
+	vk_check(vkCreateImage(app->device.logical, &imageInfo, nullptr, &image));
+	// memory
+	mem = app->device.allocImageMemory(image,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+	// view
+	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewInfo.image = image;
+	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewInfo.format = imageInfo.format;
+	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+	viewInfo.subresourceRange.levelCount = 1;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.layerCount = 1;
+
+	vk_check(vkCreateImageView(app->device.logical, &viewInfo, nullptr, &view));
+
+	auto cmdBuf = this->app->bufferMgr.beginOnce();
+	this->app->sync.setImageLayout(cmdBuf, this, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT	);
+	this->app->bufferMgr.endOnce(cmdBuf);
+
+	// descriptor image info
+	descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	descriptorImageInfo.imageView = view;
+	descriptorImageInfo.sampler = VK_NULL_HANDLE;
+
 }
 
 void qb::Image::_buildTex2d() {
@@ -380,14 +433,4 @@ void qb::Image::destroy(){
 	vkDestroyImage(app->device.logical, image, nullptr);
 	vkDestroySampler(app->device.logical, sampler, nullptr);
 	vkFreeMemory(app->device.logical, mem, nullptr);
-}
-
-VkDescriptorSetLayoutBinding qb::Image::getLayoutBinding(uint32_t binding, VkShaderStageFlags stageFlags){
-	VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
-	samplerLayoutBinding.binding = binding;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = stageFlags;
-	return samplerLayoutBinding;
 }

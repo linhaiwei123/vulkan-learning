@@ -115,5 +115,11 @@
     <None Include="shaders\triangle.vert">
       <Filter>Source Files\shaders</Filter>
     </None>
+    <None Include="shaders\writePipeline.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="shaders\writePipeline.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

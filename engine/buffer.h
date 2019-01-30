@@ -105,8 +105,8 @@ namespace qb {
 
 		void buildDepth();
 
-		void destroy();
+		void buildColorAttach();
 
-		VkDescriptorSetLayoutBinding getLayoutBinding(uint32_t binding, VkShaderStageFlags stageFlags);
+		void destroy();
 	};
 };

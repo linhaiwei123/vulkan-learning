@@ -35,6 +35,8 @@ class Triangle : public qb::App {
 	qb::Image* depthImg;
 	PushConst pushConst;
 	VkPushConstantRange pushConstRange;
+	qb::Image* colorImg;
+	qb::GraphicsPipeline* writePipeline;
 	virtual void onInit() {
 		// vertex
 		std::vector<Vertex> vertices = {
@@ -76,16 +78,21 @@ class Triangle : public qb::App {
 		img = this->bufferMgr.getImage("img");
 		img->tex = this->bufferMgr.getTex("./textures/texture.dds");
 		img->build();
+		// depth attachment
+		depthImg = this->bufferMgr.getImage("depthImg");
+		depthImg->buildDepth();
+		// color attachment
+		colorImg = this->bufferMgr.getImage("colorImg");
+		colorImg->imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+		colorImg->buildColorAttach();
 		// descriptor
 		descriptor = this->descriptorMgr.getDescriptor("descriptor");
 		descriptor->bindings = {
 			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf},
-			{img->getLayoutBinding(1, VK_SHADER_STAGE_FRAGMENT_BIT), img}
+			{descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), img},
+			{descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT), colorImg},
 		};
 		descriptor->build();
-		// depth
-		depthImg = this->bufferMgr.getImage("depthImg");
-		depthImg->buildDepth();
 		// render pass
 		renderPass = this->renderPassMgr.getRenderPass("renderPass");
 		renderPass->attachmentDescs = {
@@ -94,31 +101,80 @@ class Triangle : public qb::App {
 			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE, // stencil load / store op
 			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR // initial  finish layout
 			}, // swapchain attachment desc
-			{0, device.depthFormat, VK_SAMPLE_COUNT_1_BIT,
+			{0, depthImg->imageInfo.format, VK_SAMPLE_COUNT_1_BIT,
 			VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE, 
 			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
 			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-			} // depth attachment desc
+			}, // depth attachment desc
+			{0, colorImg->imageInfo.format, VK_SAMPLE_COUNT_1_BIT,
+			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			}, // color attachment desc
 		};
 		renderPass->attachmentRefs = {
 			{
+				{2, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL} // color attachment ref
+			},	// sub pass 0
+			{
 				{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL}, // swap chain attachment ref
 				{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL}, // depth stencil attachment ref
+				{2, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL } // color attachment ref -> input attachment ref
 			} // sub pass 1
 		};
 		renderPass->subpassDescs = {
-			{0, VK_PIPELINE_BIND_POINT_GRAPHICS, 
-			0, nullptr, // input attachment ref
-			1, &renderPass->attachmentRefs[0][0], // color attachment ref
-			nullptr,  // resolve attachment ref
-			&renderPass->attachmentRefs[0][1], // depth stencil attachment ref
-			0, nullptr // preserve attachment ref
-			} // sub pass 1 
+			{
+				0, VK_PIPELINE_BIND_POINT_GRAPHICS,
+				0 , nullptr, // input attachment ref
+				1, &renderPass->attachmentRefs[0][0], // color attachment ref
+				nullptr, // resolve attachment ref
+				nullptr, // depth stencil attachment ref
+				0, nullptr // preserve attachment ref
+			}, // sub pass 0
+			{
+				0, VK_PIPELINE_BIND_POINT_GRAPHICS, 
+				1, &renderPass->attachmentRefs[1][2], // input attachment ref
+				1, &renderPass->attachmentRefs[1][0], // color attachment ref
+				nullptr,  // resolve attachment ref
+				&renderPass->attachmentRefs[1][1], // depth stencil attachment ref
+				0, nullptr // preserve attachment ref
+			} // sub pass 1
+		};
+		renderPass->dependencies = {
+			{
+				VK_SUBPASS_EXTERNAL, 0, 
+				VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+				VK_ACCESS_MEMORY_READ_BIT, VK_ACCESS_COLOR_ATTACHMENT_READ_BIT|VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+				VK_DEPENDENCY_BY_REGION_BIT
+			}, // external -> 0 mem -> color output
+			{
+				0, 1,
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
+				VK_DEPENDENCY_BY_REGION_BIT
+			}, // 0 -> 1 color output -> input
+			{
+				0, VK_SUBPASS_EXTERNAL,
+				VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+				VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT,
+				VK_DEPENDENCY_BY_REGION_BIT
+			}, // 0 -> external color output -> mem
 		};
 		renderPass->build();
+		// write pipeline
+		writePipeline = this->pipelineMgr.getGraphicsPipeline("writePipeline");
+		writePipeline->renderPass = renderPass->renderPass;
+		writePipeline->pipelineInfo.subpass = 0;
+		writePipeline->rasterizer.cullMode = VK_CULL_MODE_NONE;
+		writePipeline->shaderStages = {
+			this->pipelineMgr.getShaderStage("./shaders/writePipeline.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+			this->pipelineMgr.getShaderStage("./shaders/writePipeline.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
+		};
+		writePipeline->build();
 		// pipeline
 		pipeline = this->pipelineMgr.getGraphicsPipeline("pipeline");
 		pipeline->renderPass = renderPass->renderPass;
+		pipeline->pipelineInfo.subpass = 1;
 		pipeline->shaderStages = {
 			this->pipelineMgr.getShaderStage("./shaders/triangle.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
 			this->pipelineMgr.getShaderStage("./shaders/triangle.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -142,7 +198,8 @@ class Triangle : public qb::App {
 		this->bufferMgr.onAttachments = [this](size_t i) -> std::vector<VkImageView> {
 			return {
 				this->swapchain.views[i],
-				depthImg->view 
+				depthImg->view,
+				colorImg->view,
 			};
 		};
 		this->bufferMgr.build();
@@ -152,10 +209,16 @@ class Triangle : public qb::App {
 		// command buffer
 		this->bufferMgr.begin(i);
 		this->renderPass->clearValues = {
-			{0.0f, 0.0f, 0.0f, 1.0f}, // color 
-			{1.0f, 0} // depth stencil
+			{0.0f, 0.0f, 0.0f, 1.0f}, // swap chain
+			{1.0f, 0}, // depth stencil
+			{1.0f, 0.0f, 0.0f, 1.0f} // color
 		};
 		this->renderPass->begin(i);
+		// sub pass 0
+		vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->pipeline);
+		vkCmdDraw(this->bufferMgr.cmdBuf(i), 3, 1, 0, 0);
+		// sub pass 1
+		vkCmdNextSubpass(this->bufferMgr.cmdBuf(i), VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline->pipeline);
 		VkDeviceSize offset = 0;
 		vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), 0, 1, &vertexBuf->buffer(), &offset);

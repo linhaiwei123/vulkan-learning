@@ -37,6 +37,9 @@ namespace qb {
 		VkDescriptorSetLayout layout;
 		std::vector<VkDescriptorSet> descriptorSets;
 	public:
+		static bool is_descriptor_type_uniform(VkDescriptorType type);
+		static bool is_descriptor_type_texel_buffer(VkDescriptorType type);
+		static bool is_descriptor_type_image(VkDescriptorType type);
 		Descriptor() = default;
 		void init(App* app, std::string name);
 		

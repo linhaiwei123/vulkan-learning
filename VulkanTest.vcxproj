@@ -192,6 +192,8 @@
   <ItemGroup>
     <None Include="shaders\triangle.frag" />
     <None Include="shaders\triangle.vert" />
+    <None Include="shaders\writePipeline.frag" />
+    <None Include="shaders\writePipeline.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -19,7 +19,7 @@ void qb::DescriptorMgr::init(App *app) {
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(app->swapchain.views.size());
+	poolInfo.maxSets = static_cast<uint32_t>(app->swapchain.views.size() * poolSizes.size());
 
 	vk_check(vkCreateDescriptorPool(app->device.logical, &poolInfo, nullptr, &descriptorPool));
 }
@@ -41,6 +41,35 @@ void qb::DescriptorMgr::destroy() {
 		delete it->second;
 	}
 	vkDestroyDescriptorPool(app->device.logical, descriptorPool, nullptr);
+}
+
+bool qb::Descriptor::is_descriptor_type_image(VkDescriptorType type){
+	if (type == VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT
+		)
+		return true;
+		return false;
+}
+
+bool qb::Descriptor::is_descriptor_type_texel_buffer(VkDescriptorType type){
+	if (type == VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER
+		)
+		return true;
+		return false;
+}
+
+bool qb::Descriptor::is_descriptor_type_uniform(VkDescriptorType type){
+	if (type == VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
+		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+		)
+		return true;
+		return false;
 }
 
 void qb::Descriptor::init(App * app, std::string name){
@@ -82,9 +111,13 @@ void qb::Descriptor::build(){
 			descriptorWrite.dstArrayElement = 0;
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.descriptorType = layoutBindings[j].descriptorType;
-			descriptorWrite.pBufferInfo = descriptorWrite.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ? &std::any_cast<Buffer*>(buffers[j])->descriptorBufferInfos[i] : nullptr;
-			descriptorWrite.pImageInfo = descriptorWrite.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ? &std::any_cast<Image*>(buffers[j])->descriptorImageInfo : nullptr;
-			descriptorWrite.pTexelBufferView = nullptr; // TODO
+			if(is_descriptor_type_uniform(descriptorWrite.descriptorType))
+				descriptorWrite.pBufferInfo = &std::any_cast<Buffer*>(buffers[j])->descriptorBufferInfos[i];
+			else if(is_descriptor_type_image(descriptorWrite.descriptorType))
+				descriptorWrite.pImageInfo = &std::any_cast<Image*>(buffers[j])->descriptorImageInfo;
+			else if(is_descriptor_type_texel_buffer(descriptorWrite.descriptorType))
+				descriptorWrite.pTexelBufferView = nullptr; // TODO
+			else assert(0);
 		}
 		vkUpdateDescriptorSets(app->device.logical, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);
 	}

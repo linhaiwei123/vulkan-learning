@@ -131,7 +131,7 @@ void qb::GraphicsPipeline::init(App * app, std::string name) {
 	multisampling.pSampleMask = nullptr;
 	multisampling.alphaToCoverageEnable = VK_FALSE;
 	multisampling.alphaToOneEnable = VK_FALSE;
-	// depth stenil
+	// depth stencil
 	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	depthStencil.depthTestEnable = VK_FALSE;
 	depthStencil.depthWriteEnable = VK_TRUE;
@@ -206,7 +206,7 @@ void qb::GraphicsPipeline::build() {
 	pipelineInfo.pDynamicState = &dynamicState;
 	pipelineInfo.layout = layout;
 	pipelineInfo.renderPass = renderPass;
-	pipelineInfo.subpass = 0;
+	// pipelineInfo.subpass = 0; init outside
 	vk_check(vkCreateGraphicsPipelines(app->device.logical, app->pipelineMgr.pipelineCache, 1, &pipelineInfo, nullptr, &pipeline));
 }
 

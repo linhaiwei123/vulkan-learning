@@ -58,6 +58,8 @@ void qb::RenderPass::build() {
 	renderPassInfo.pAttachments = attachmentDescs.data();
 	renderPassInfo.subpassCount = static_cast<uint32_t>(subpassDescs.size());
 	renderPassInfo.pSubpasses = subpassDescs.data();
+	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+	renderPassInfo.pDependencies = dependencies.data();
 
 	vk_check(vkCreateRenderPass(app->device.logical, &renderPassInfo, nullptr, &renderPass));
 }
