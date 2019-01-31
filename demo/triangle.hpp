@@ -34,9 +34,13 @@ class Triangle : public qb::App {
 	qb::Image* img;
 	qb::Image* depthImg;
 	PushConst pushConst;
-	VkPushConstantRange pushConstRange;
+	VkPushConstantRange graphicsPushConstRange;
+	VkPushConstantRange computePushConstRange;
 	qb::Image* colorImg;
 	qb::GraphicsPipeline* writePipeline;
+	qb::Image* storeImg;
+	qb::Descriptor* compDescriptor;
+	qb::ComputePipeline* compPipeline;
 	virtual void onInit() {
 		// vertex
 		std::vector<Vertex> vertices = {
@@ -73,26 +77,59 @@ class Triangle : public qb::App {
 		uniBuf->descriptorRange = sizeof(Uniform);
 		uniBuf->buildPerSwapchainImg();
 		// push const
-		pushConstRange = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConst) };
+		graphicsPushConstRange = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConst) };
+		computePushConstRange = { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConst) };
 		// image
 		img = this->bufferMgr.getImage("img");
 		img->tex = this->bufferMgr.getTex("./textures/texture.dds");
+		img->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		img->build();
+		img->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 		// depth attachment
 		depthImg = this->bufferMgr.getImage("depthImg");
-		depthImg->buildDepth();
+		depthImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		depthImg->imageInfo.format = this->device.depthFormat;
+		depthImg->imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		depthImg->viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		depthImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		depthImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthImg->build();
+		depthImg->setImageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
 		// color attachment
 		colorImg = this->bufferMgr.getImage("colorImg");
+		colorImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
 		colorImg->imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-		colorImg->buildColorAttach();
+		colorImg->imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+		colorImg->viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		colorImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		colorImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		colorImg->build();
+		colorImg->setImageLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+		// store img
+		storeImg = this->bufferMgr.getImage("storeImg");
+		storeImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		storeImg->imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+		storeImg->imageInfo.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		storeImg->viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		storeImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		storeImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		storeImg->build();
+		storeImg->setImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
 		// descriptor
 		descriptor = this->descriptorMgr.getDescriptor("descriptor");
 		descriptor->bindings = {
 			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf},
 			{descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), img},
 			{descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT), colorImg},
+			{descriptor_layout_binding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), storeImg},
 		};
-		descriptor->build();
+		descriptor->buildPerSwapchainImg();
+		// compute descriptor
+		compDescriptor = this->descriptorMgr.getDescriptor("computeDescriptor");
+		compDescriptor->bindings = {
+			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT), storeImg},
+		};
+		compDescriptor->build();
 		// render pass
 		renderPass = this->renderPassMgr.getRenderPass("renderPass");
 		renderPass->attachmentDescs = {
@@ -171,6 +208,14 @@ class Triangle : public qb::App {
 			this->pipelineMgr.getShaderStage("./shaders/writePipeline.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
 		};
 		writePipeline->build();
+		// compute pipeline
+		compPipeline = this->pipelineMgr.getComputePipeline("computePipeline");
+		compPipeline->shaderStage = this->pipelineMgr.getShaderStage("./shaders/compute.comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
+		compPipeline->pipelineLayoutInfo.setLayoutCount = 1;
+		compPipeline->pipelineLayoutInfo.pSetLayouts = &compDescriptor->layout;
+		compPipeline->pipelineLayoutInfo.pushConstantRangeCount = 1;
+		compPipeline->pipelineLayoutInfo.pPushConstantRanges = &computePushConstRange;
+		compPipeline->build();
 		// pipeline
 		pipeline = this->pipelineMgr.getGraphicsPipeline("pipeline");
 		pipeline->renderPass = renderPass->renderPass;
@@ -189,7 +234,7 @@ class Triangle : public qb::App {
 		pipeline->pipelineLayoutInfo.pSetLayouts = &this->descriptor->layout;
 
 		pipeline->pipelineLayoutInfo.pushConstantRangeCount = 1; // push const range binding
-		pipeline->pipelineLayoutInfo.pPushConstantRanges = &pushConstRange;
+		pipeline->pipelineLayoutInfo.pPushConstantRanges = &graphicsPushConstRange;
 
 		pipeline->depthStencil.depthTestEnable = VK_TRUE; // depth stencil binding
 		pipeline->build();
@@ -208,6 +253,12 @@ class Triangle : public qb::App {
 	virtual void onCmd(size_t i) {
 		// command buffer
 		this->bufferMgr.begin(i);
+
+		/*vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->pipeline);
+		vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->layout, 0, 1, &compDescriptor->sets(), 0, 0);
+		vkCmdDispatch(this->bufferMgr.cmdBuf(i), storeImg->imageInfo.extent.width / 16, storeImg->imageInfo.extent.height / 16, 1);*/
+
+		storeImg->setImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, this->bufferMgr.cmdBuf(i));
 		this->renderPass->clearValues = {
 			{0.0f, 0.0f, 0.0f, 1.0f}, // swap chain
 			{1.0f, 0}, // depth stencil
@@ -245,7 +296,11 @@ class Triangle : public qb::App {
 		// push const update
 		auto cmdBuf = this->bufferMgr.beginOnce();
 		pushConst.speed = glm::vec2(0.5f, 0.5f) * time;
-		vkCmdPushConstants(cmdBuf, this->pipeline->layout, pushConstRange.stageFlags, pushConstRange.offset, pushConstRange.size, &pushConst);
+		vkCmdPushConstants(cmdBuf, this->pipeline->layout, graphicsPushConstRange.stageFlags, graphicsPushConstRange.offset, graphicsPushConstRange.size, &pushConst);
+		vkCmdPushConstants(cmdBuf, this->compPipeline->layout, computePushConstRange.stageFlags, computePushConstRange.offset, computePushConstRange.size, &pushConst);
+		vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->pipeline);
+		vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->layout, 0, 1, &compDescriptor->sets(), 0, 0);
+		vkCmdDispatch(cmdBuf, storeImg->imageInfo.extent.width / 16, storeImg->imageInfo.extent.height / 16, 1);
 		this->bufferMgr.endOnce(cmdBuf);
 	};
 

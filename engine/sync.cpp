@@ -32,13 +32,13 @@ void qb::Sync::destroy() {
 void qb::Sync::setImageLayout(
 	VkCommandBuffer cmdBuf,
 	Image* image,
+	VkImageLayout oldImageLayout,
 	VkImageLayout newImageLayout,
 	VkPipelineStageFlags srcStageMask,
 	VkPipelineStageFlags dstStageMask)
 {
 
 	// Create an image barrier object
-	VkImageLayout oldImageLayout = image->imgLayout;
 	VkImageMemoryBarrier imageMemoryBarrier = {};
 	imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	imageMemoryBarrier.oldLayout = oldImageLayout;
@@ -94,6 +94,9 @@ void qb::Sync::setImageLayout(
 		// Make sure any shader reads from the image have been finished
 		imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		break;
+	case VK_IMAGE_LAYOUT_GENERAL:
+		imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+		break;
 	default:
 		// Other source layouts aren't handled (yet)
 		assert(0);
@@ -137,6 +140,9 @@ void qb::Sync::setImageLayout(
 		}
 		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 		break;
+	case VK_IMAGE_LAYOUT_GENERAL:
+		imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		break;
 	default:
 		// Other source layouts aren't handled (yet)
 		assert(0);
@@ -152,7 +158,5 @@ void qb::Sync::setImageLayout(
 		0, nullptr,
 		0, nullptr,
 		1, &imageMemoryBarrier);
-
-	image->imgLayout = newImageLayout;
 }
 

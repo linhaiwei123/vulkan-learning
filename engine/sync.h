@@ -27,6 +27,7 @@ namespace qb {
 		void setImageLayout(
 			VkCommandBuffer cmdBuf,
 			Image* image,
+			VkImageLayout oldImageLayout,
 			VkImageLayout newImageLayout,
 			VkPipelineStageFlags srcStageMask,
 			VkPipelineStageFlags dstStageMask);

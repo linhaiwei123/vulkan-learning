@@ -190,6 +190,7 @@
     <ClInclude Include="engine\win.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\compute.comp" />
     <None Include="shaders\triangle.frag" />
     <None Include="shaders\triangle.vert" />
     <None Include="shaders\writePipeline.frag" />

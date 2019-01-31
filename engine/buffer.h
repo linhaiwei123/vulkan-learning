@@ -85,12 +85,12 @@ namespace qb {
 		App* app;
 		std::string name;
 		Buffer* stageBuffer;
+		VkImageLayout _imgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	public:
 		VkImageCreateInfo imageInfo{};
 		VkImageViewCreateInfo viewInfo{};
 		VkSamplerCreateInfo samplerInfo{};
 		VkImage image = VK_NULL_HANDLE;
-		VkImageLayout imgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		VkImageView view = VK_NULL_HANDLE;
 		VkSampler sampler = VK_NULL_HANDLE;
 		VkDeviceMemory mem = VK_NULL_HANDLE;
@@ -98,15 +98,16 @@ namespace qb {
 		VkDescriptorImageInfo descriptorImageInfo = {};
 	private:
 		void _buildTex2d();
+		void _buildTexNull();
 	public:
 		void init(App* app, std::string name);
 
 		void build();
 
-		void buildDepth();
-
-		void buildColorAttach();
-
 		void destroy();
+
+		void setImageLayout(VkImageLayout layout, VkPipelineStageFlagBits srcStage, VkPipelineStageFlagBits dstStage, VkCommandBuffer cmdBuf=VK_NULL_HANDLE);
+
+		VkImageLayout getImageLayout();
 	};
 };

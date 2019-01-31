@@ -10,10 +10,12 @@
 namespace qb {
 	class App;
 	class GraphicsPipeline;
+	class ComputePipeline;
 	class PipelineMgr {
 	private:
 		std::unordered_map<std::string, VkShaderModule> _shadermoduleMap{};
 		std::unordered_map<std::string, GraphicsPipeline*> _graphicsPipelineMap{};
+		std::unordered_map<std::string, ComputePipeline*> _computePipelineMap{};
 		std::map<std::pair<std::string, VkShaderStageFlagBits>, VkPipelineShaderStageCreateInfo> _shaderStageMap{};
 	public:
 		App *app;
@@ -26,6 +28,7 @@ namespace qb {
 		
 		VkPipelineShaderStageCreateInfo getShaderStage(const std::string filename, VkShaderStageFlagBits stage);
 		GraphicsPipeline* getGraphicsPipeline(const std::string name);
+		ComputePipeline* getComputePipeline(const std::string name);
 		
 		void init(App *app);
 		void destroy();
@@ -56,6 +59,24 @@ namespace qb {
 		VkRenderPass renderPass = VK_NULL_HANDLE;
 	public:
 		GraphicsPipeline() = default;
+
+		void init(App* app, std::string name);
+		void build();
+		void destroy();
+	};
+
+	class ComputePipeline {
+	private:
+		App* app;
+		std::string name;
+	public:
+		VkComputePipelineCreateInfo pipelineInfo{};
+		VkPipelineShaderStageCreateInfo shaderStage;
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+		VkPipelineLayout layout = VK_NULL_HANDLE;
+		VkPipeline pipeline = VK_NULL_HANDLE;
+	public:
+		ComputePipeline() = default;
 
 		void init(App* app, std::string name);
 		void build();

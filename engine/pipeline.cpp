@@ -48,16 +48,28 @@ VkPipelineShaderStageCreateInfo qb::PipelineMgr::getShaderStage(const std::strin
 	return _shaderStageMap.at(key);
 }
 
-qb::GraphicsPipeline* qb::PipelineMgr::getGraphicsPipeline(const std::string pipelineName) {
+qb::GraphicsPipeline* qb::PipelineMgr::getGraphicsPipeline(const std::string name) {
 	// read graphics pipeline from cache
-	auto it = _graphicsPipelineMap.find(pipelineName);
+	auto it = _graphicsPipelineMap.find(name);
 	if (it != _graphicsPipelineMap.end())
 		return it->second;
 	GraphicsPipeline* pipeline = new GraphicsPipeline();
-	pipeline->init(app, pipelineName);
-	_graphicsPipelineMap.insert({ pipelineName, pipeline });
+	pipeline->init(app, name);
+	_graphicsPipelineMap.insert({ name, pipeline });
 
-	return _graphicsPipelineMap.at(pipelineName);
+	return _graphicsPipelineMap.at(name);
+}
+
+qb::ComputePipeline * qb::PipelineMgr::getComputePipeline(const std::string name){
+	// read compute pipeline from cache
+	auto it = _computePipelineMap.find(name);
+	if (it != _computePipelineMap.end())
+		return it->second;
+	ComputePipeline* pipeline = new ComputePipeline();
+	pipeline->init(app, name);
+	_computePipelineMap.insert({ name, pipeline });
+
+	return _computePipelineMap.at(name);
 }
 
 
@@ -77,6 +89,10 @@ void qb::PipelineMgr::destroy() {
 		vkDestroyShaderModule(app->device.logical, it->second, nullptr);
 	}
 	for (auto it = _graphicsPipelineMap.begin(); it != _graphicsPipelineMap.end(); it++) {
+		it->second->destroy();
+		delete it->second;
+	}
+	for (auto it = _computePipelineMap.begin(); it != _computePipelineMap.end(); it++) {
 		it->second->destroy();
 		delete it->second;
 	}
@@ -211,6 +227,39 @@ void qb::GraphicsPipeline::build() {
 }
 
 void qb::GraphicsPipeline::destroy() {
+	vkDestroyPipeline(app->device.logical, pipeline, nullptr);
+	vkDestroyPipelineLayout(app->device.logical, layout, nullptr);
+}
+
+void qb::ComputePipeline::init(App * app, std::string name){
+	this->app = app;
+	this->name = name;
+	// shader stage
+	// pipeline layout
+	pipelineLayoutInfo = {};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 0;
+	pipelineLayoutInfo.pSetLayouts = nullptr;
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+}
+
+void qb::ComputePipeline::build(){
+	if (pipeline != VK_NULL_HANDLE) {
+		vkDestroyPipeline(app->device.logical, pipeline, nullptr);
+	}
+	if (layout != VK_NULL_HANDLE) {
+		vkDestroyPipelineLayout(app->device.logical, layout, nullptr);
+	}
+	vk_check(vkCreatePipelineLayout(app->device.logical, &pipelineLayoutInfo, nullptr, &layout));
+	// pipeline create info
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+	pipelineInfo.stage = shaderStage;
+	pipelineInfo.layout = layout;
+	vk_check(vkCreateComputePipelines(app->device.logical, app->pipelineMgr.pipelineCache, 1, &pipelineInfo, nullptr, &pipeline));
+}
+
+void qb::ComputePipeline::destroy(){
 	vkDestroyPipeline(app->device.logical, pipeline, nullptr);
 	vkDestroyPipelineLayout(app->device.logical, layout, nullptr);
 }

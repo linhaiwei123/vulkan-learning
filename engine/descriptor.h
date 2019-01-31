@@ -43,9 +43,11 @@ namespace qb {
 		Descriptor() = default;
 		void init(App* app, std::string name);
 		
-		void build();
+		void build(size_t count=1);
 
-		inline VkDescriptorSet& sets(int i = 0) { return descriptorSets[i]; };
+		void buildPerSwapchainImg();
+
+		inline VkDescriptorSet& sets(size_t i = 0) { return descriptorSets[i]; };
 		void destroy();
 	};
 };

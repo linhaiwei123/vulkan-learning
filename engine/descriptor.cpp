@@ -4,22 +4,21 @@
 void qb::DescriptorMgr::init(App *app) {
 	this->app = app;
 
-	// descriptor pool
-	std::array<VkDescriptorPoolSize, 4> poolSizes = {};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(app->swapchain.views.size());
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(app->swapchain.views.size());
-	poolSizes[2].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	poolSizes[2].descriptorCount = static_cast<uint32_t>(app->swapchain.views.size());
-	poolSizes[3].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-	poolSizes[3].descriptorCount = static_cast<uint32_t>(app->swapchain.views.size());
+	//descriptor pool
+	uint32_t descriptorCount = static_cast<uint32_t>(app->swapchain.views.size()) * 8;
+	std::vector<VkDescriptorPoolSize> poolSizes = {
+		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount},
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount},
+		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorCount},
+		{VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, descriptorCount},
+		{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount},
+	};
 
 	VkDescriptorPoolCreateInfo poolInfo = {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(app->swapchain.views.size() * poolSizes.size());
+	poolInfo.maxSets = static_cast<uint32_t>(descriptorCount * poolSizes.size());
 
 	vk_check(vkCreateDescriptorPool(app->device.logical, &poolInfo, nullptr, &descriptorPool));
 }
@@ -77,7 +76,8 @@ void qb::Descriptor::init(App * app, std::string name){
 	this->name = name;
 }
 
-void qb::Descriptor::build(){
+void qb::Descriptor::build(size_t count){
+	assert(count >= 1);
 	assert(bindings.size() != 0);
 	// descriptor set layout
 	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
@@ -88,20 +88,20 @@ void qb::Descriptor::build(){
 	layoutInfo.pBindings = layoutBindings.data();
 	vkCreateDescriptorSetLayout(app->device.logical, &layoutInfo, nullptr, &layout);
 	// descriptor set
-	std::vector<VkDescriptorSetLayout> layouts(app->swapchain.views.size(), layout);
+	std::vector<VkDescriptorSetLayout> layouts(count, layout);
 	VkDescriptorSetAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = app->descriptorMgr.descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(app->swapchain.views.size());
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(count);
 	allocInfo.pSetLayouts = layouts.data();
-	descriptorSets.resize(app->swapchain.views.size());
+	descriptorSets.resize(count);
 	vk_check(vkAllocateDescriptorSets(app->device.logical, &allocInfo, descriptorSets.data()));
 
 	// descriptor buffer/image info
 	std::vector<std::any> buffers(bindings.size());
 	transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) -> std::any {return v.second; });
 	size_t bufferCount = buffers.size();
-	for (size_t i = 0; i < app->swapchain.views.size(); i++) {
+	for (size_t i = 0; i < count; i++) {
 		std::vector<VkWriteDescriptorSet> writeSets(bufferCount);
 		for (size_t j = 0; j < bufferCount; j++) {
 			VkWriteDescriptorSet& descriptorWrite = writeSets[j];
@@ -121,6 +121,10 @@ void qb::Descriptor::build(){
 		}
 		vkUpdateDescriptorSets(app->device.logical, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);
 	}
+}
+
+void qb::Descriptor::buildPerSwapchainImg(){
+	this->build(app->swapchain.views.size());
 }
 
 void qb::Descriptor::destroy(){

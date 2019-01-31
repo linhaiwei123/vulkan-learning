@@ -121,5 +121,8 @@
     <None Include="shaders\writePipeline.vert">
       <Filter>Source Files\shaders</Filter>
     </None>
+    <None Include="shaders\compute.comp">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

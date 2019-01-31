@@ -149,4 +149,5 @@ uint32_t qb::Device::_findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags 
 	}
 
 	assert(i != memProperties.memoryTypeCount);
+	return -1;
 }

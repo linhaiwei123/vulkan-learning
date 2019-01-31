@@ -1,0 +1,19 @@
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(binding = 0, rgba8) uniform image2D outImage;
+
+layout(push_constant) uniform PushConst {
+	vec2 speed;
+} pushConst;
+
+
+void main()
+{
+	vec2 imgExtent = gl_NumWorkGroups.xy * gl_WorkGroupSize.xy;
+	vec2 center = imgExtent * 0.5f;
+	float distance = length((center - gl_GlobalInvocationID.xy)/imgExtent);
+	vec4 brightness = vec4(1.0f, 1.0f, 1.0f, 1.0f) * abs(sin(pushConst.speed.x));
+	vec4 res =  brightness * (1.0f - smoothstep(0.1f, 0.2f, distance) + 0.6f);
+	imageStore(outImage, ivec2(gl_GlobalInvocationID.xy), res);
+}
