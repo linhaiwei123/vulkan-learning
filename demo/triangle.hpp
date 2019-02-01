@@ -7,7 +7,7 @@ struct Vertex {
 	vertex_attrib_desc(
 		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos) },
 		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) },
-		{2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord)}
+		{ 2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord)}
 		);
 };
 
@@ -214,7 +214,6 @@ class Triangle : public qb::App {
 		writePipeline = this->pipelineMgr.getGraphicsPipeline("writePipeline");
 		writePipeline->renderPass = renderPass->renderPass;
 		writePipeline->pipelineInfo.subpass = 0;
-		writePipeline->rasterizer.cullMode = VK_CULL_MODE_NONE;
 		writePipeline->shaderStages = {
 			this->pipelineMgr.getShaderStage("./shaders/writePipeline.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
 			this->pipelineMgr.getShaderStage("./shaders/writePipeline.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
@@ -299,10 +298,9 @@ class Triangle : public qb::App {
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 		uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 		uniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 
 			0.1f, 10.0f);
-		uniform.proj[1][1] *= -1;
 		this->uniBuf->mappingCurSwapchainImg(&uniform);
 
 		// push const update

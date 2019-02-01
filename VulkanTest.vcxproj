@@ -172,7 +172,6 @@
     <ClCompile Include="engine\descriptor.cpp" />
     <ClCompile Include="engine\win.cpp" />
     <ClCompile Include="entry.cpp" />
-    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="demo\triangle.hpp" />
