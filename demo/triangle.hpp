@@ -265,10 +265,6 @@ class Triangle : public qb::App {
 		// command buffer
 		this->bufferMgr.begin(i);
 
-		/*vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->pipeline);
-		vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_COMPUTE, compPipeline->layout, 0, 1, &compDescriptor->sets(), 0, 0);
-		vkCmdDispatch(this->bufferMgr.cmdBuf(i), storeImg->imageInfo.extent.width / 16, storeImg->imageInfo.extent.height / 16, 1);*/
-
 		storeImg->setImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, this->bufferMgr.cmdBuf(i));
 		this->renderPass->clearValues = {
 			{0.0f, 0.0f, 0.0f, 1.0f}, // swap chain
