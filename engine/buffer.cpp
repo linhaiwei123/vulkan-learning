@@ -379,6 +379,9 @@ VkImageType qb::Image::_getImageTypeFromTex(){
 		return VkImageType::VK_IMAGE_TYPE_2D;
 	case gli::texture::target_type::TARGET_3D:
 		return VkImageType::VK_IMAGE_TYPE_3D;
+	default:
+		assert(0);
+		return VkImageType::VK_IMAGE_TYPE_MAX_ENUM;
 	}
 }
 
@@ -405,6 +408,9 @@ VkImageViewType qb::Image::_getImageViewTypeFromTex(){
 		return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
 	case gli::texture::target_type::TARGET_3D:
 		return VkImageViewType::VK_IMAGE_VIEW_TYPE_3D;
+	default:
+		assert(0);
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_MAX_ENUM;
 	}
 }
 
@@ -428,6 +434,7 @@ VkComponentMapping qb::Image::_getImageViewComponentMappingFromTex(){
 			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_ONE;
 		default:
 			assert(0);
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
 		}
 	};
 	return {
