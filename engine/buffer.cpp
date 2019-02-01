@@ -302,90 +302,31 @@ void qb::Image::init(App * app, std::string name){
 }
 
 void qb::Image::build() {
-	if (tex == nullptr) {
-		this->_buildTexNull();
+	// texture
+	if (tex != nullptr) {
+		imageInfo.imageType = _getImageTypeFromTex();
+		imageInfo.extent = {
+			static_cast<uint32_t>(tex->extent(0).x),
+			static_cast<uint32_t>(tex->extent(0).y),
+			static_cast<uint32_t>(tex->extent(0).z),
+		};
+		imageInfo.mipLevels = static_cast<uint32_t>(tex->levels());
+		imageInfo.arrayLayers = static_cast<uint32_t>(tex->layers());
+		imageInfo.format = static_cast<VkFormat>(tex->format());
+		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+		// view
+		viewInfo.viewType = _getImageViewTypeFromTex();
+		viewInfo.subresourceRange.baseMipLevel = static_cast<uint32_t>(tex->base_level());
+		viewInfo.subresourceRange.levelCount = static_cast<uint32_t>(tex->levels());
+		viewInfo.subresourceRange.baseArrayLayer = static_cast<uint32_t>(tex->base_layer());
+		viewInfo.subresourceRange.layerCount = static_cast<uint32_t>(tex->layers());
+		viewInfo.components = _getImageViewComponentMappingFromTex();
+
+		// sampler
+		samplerInfo.maxLod = static_cast<float>(tex->levels());
 	}
-	else {
-		gli::texture::target_type target = tex->target();
-		switch (target) {
-		case gli::texture::target_type::TARGET_2D:
-			this->_buildTex2d();
-			break;
-		default:
-			log_error("not build handle support texture type: %d", target);
-			assert(0);
-		}
-	}
-}
 
-void qb::Image::_buildTex2d() {
-	// image
-	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageInfo.extent = {
-		static_cast<uint32_t>(tex->extent(0).x),
-		static_cast<uint32_t>(tex->extent(0).y),
-		static_cast<uint32_t>(tex->extent(0).z),
-	};
-	imageInfo.mipLevels = static_cast<uint32_t>(tex->levels());
-	imageInfo.arrayLayers = static_cast<uint32_t>(tex->layers());
-	imageInfo.format = static_cast<VkFormat>(tex->format());
-	imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	imageInfo.initialLayout = getImageLayout();
-	imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.flags = 0;
-	vk_check(vkCreateImage(app->device.logical, &imageInfo, nullptr, &image));
-	// memory
-	mem = app->device.allocImageMemory(image,
-		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-	// view
-	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	viewInfo.image = image;
-	viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	viewInfo.format = imageInfo.format;
-	viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	viewInfo.subresourceRange.baseMipLevel = static_cast<uint32_t>(tex->base_level());
-	viewInfo.subresourceRange.levelCount = static_cast<uint32_t>(tex->levels());
-	viewInfo.subresourceRange.baseArrayLayer = static_cast<uint32_t>(tex->base_layer());
-	viewInfo.subresourceRange.layerCount = static_cast<uint32_t>(tex->layers());
-
-	vk_check(vkCreateImageView(app->device.logical, &viewInfo, nullptr, &view));
-
-	// stage buffer
-	this->stageBuffer = app->bufferMgr.getBuffer("$tex_" + name);
-	this->stageBuffer->bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	this->stageBuffer->bufferInfo.size = tex->size();
-	this->stageBuffer->build();
-	this->stageBuffer->mapping(tex->data());
-	this->stageBuffer->copyToImage(this);
-
-	// sampler
-	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.mipLodBias = 0.0f;
-	samplerInfo.compareOp = VK_COMPARE_OP_NEVER;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = static_cast<float>(tex->levels());
-	samplerInfo.maxAnisotropy = 1.0;
-	samplerInfo.anisotropyEnable = VK_FALSE;
-	samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-	vk_check(vkCreateSampler(app->device.logical, &samplerInfo, nullptr, &sampler));
-
-	// descriptor image info
-	assert(descriptorImageInfo.imageLayout != VK_IMAGE_LAYOUT_MAX_ENUM); // init outside
-	descriptorImageInfo.imageView = view;
-	descriptorImageInfo.sampler = sampler;
-}
-
-void qb::Image::_buildTexNull(){
 	// image
 	assert(imageInfo.imageType != VK_IMAGE_TYPE_MAX_ENUM); // init outside
 	assert(imageInfo.format != VK_FORMAT_MAX_ENUM); // init outside
@@ -402,6 +343,16 @@ void qb::Image::_buildTexNull(){
 	assert(viewInfo.subresourceRange.aspectMask != VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM); //init outside
 	vk_check(vkCreateImageView(app->device.logical, &viewInfo, nullptr, &view));
 
+	// stage buffer
+	if (tex != nullptr) {
+		this->stageBuffer = app->bufferMgr.getBuffer("$tex_" + name);
+		this->stageBuffer->bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		this->stageBuffer->bufferInfo.size = tex->size();
+		this->stageBuffer->build();
+		this->stageBuffer->mapping(tex->data());
+		this->stageBuffer->copyToImage(this);
+	}
+
 	// sampler
 	vk_check(vkCreateSampler(app->device.logical, &samplerInfo, nullptr, &sampler));
 
@@ -409,6 +360,82 @@ void qb::Image::_buildTexNull(){
 	assert(descriptorImageInfo.imageLayout != VK_IMAGE_LAYOUT_MAX_ENUM); // init outside
 	descriptorImageInfo.imageView = view; // init inside
 	descriptorImageInfo.sampler = sampler; // init inside
+}
+
+VkImageType qb::Image::_getImageTypeFromTex(){
+	if (tex == nullptr)
+		return VkImageType::VK_IMAGE_TYPE_MAX_ENUM; // tex is nullptr
+	gli::texture::target_type targetType = tex->target();
+	switch (targetType) { 
+	case gli::texture::target_type::TARGET_1D:
+	case gli::texture::target_type::TARGET_1D_ARRAY:
+		return VkImageType::VK_IMAGE_TYPE_1D;
+	case gli::texture::target_type::TARGET_2D:
+	case gli::texture::target_type::TARGET_2D_ARRAY:
+	case gli::texture::target_type::TARGET_RECT:
+	case gli::texture::target_type::TARGET_RECT_ARRAY:
+	case gli::texture::target_type::TARGET_CUBE:
+	case gli::texture::target_type::TARGET_CUBE_ARRAY:
+		return VkImageType::VK_IMAGE_TYPE_2D;
+	case gli::texture::target_type::TARGET_3D:
+		return VkImageType::VK_IMAGE_TYPE_3D;
+	}
+}
+
+VkImageViewType qb::Image::_getImageViewTypeFromTex(){
+	if (tex == nullptr)
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_MAX_ENUM; // tex is nullptr
+	gli::texture::target_type targetType = tex->target();
+	switch (targetType) {
+	case gli::texture::target_type::TARGET_1D:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
+	case gli::texture::target_type::TARGET_1D_ARRAY:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+	case gli::texture::target_type::TARGET_2D:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+	case gli::texture::target_type::TARGET_2D_ARRAY:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+	case gli::texture::target_type::TARGET_RECT:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+	case gli::texture::target_type::TARGET_RECT_ARRAY:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+	case gli::texture::target_type::TARGET_CUBE:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE;
+	case gli::texture::target_type::TARGET_CUBE_ARRAY:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_CUBE_ARRAY;
+	case gli::texture::target_type::TARGET_3D:
+		return VkImageViewType::VK_IMAGE_VIEW_TYPE_3D;
+	}
+}
+
+VkComponentMapping qb::Image::_getImageViewComponentMappingFromTex(){
+	if (tex == nullptr)
+		return VkComponentMapping{};
+	gli::swizzles swizzles = tex->swizzles();
+	auto switchMapping = [](gli::swizzle swizzle) -> VkComponentSwizzle {
+		switch (swizzle) {
+		case gli::swizzle::SWIZZLE_RED:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R;
+		case gli::swizzle::SWIZZLE_GREEN:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G;
+		case gli::swizzle::SWIZZLE_BLUE:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B;
+		case gli::swizzle::SWIZZLE_ALPHA:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A;
+		case gli::swizzle::SWIZZLE_ZERO:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_ZERO;
+		case gli::swizzle::SWIZZLE_ONE:
+			return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_ONE;
+		default:
+			assert(0);
+		}
+	};
+	return {
+		switchMapping(swizzles.r),
+		switchMapping(swizzles.g),
+		switchMapping(swizzles.b),
+		switchMapping(swizzles.a),
+	};
 }
 
 void qb::Image::destroy(){

@@ -97,8 +97,9 @@ namespace qb {
 		gli::texture* tex = nullptr;
 		VkDescriptorImageInfo descriptorImageInfo = {};
 	private:
-		void _buildTex2d();
-		void _buildTexNull();
+		VkImageType _getImageTypeFromTex();
+		VkImageViewType _getImageViewTypeFromTex();
+		VkComponentMapping _getImageViewComponentMappingFromTex();
 	public:
 		void init(App* app, std::string name);
 

@@ -31,7 +31,7 @@ class Triangle : public qb::App {
 	Uniform uniform;
 	qb::Buffer* uniBuf;
 	qb::Descriptor* descriptor;
-	qb::Image* img;
+	qb::Image* tex2dImg;
 	qb::Image* depthImg;
 	PushConst pushConst;
 	VkPushConstantRange graphicsPushConstRange;
@@ -41,6 +41,7 @@ class Triangle : public qb::App {
 	qb::Image* storeImg;
 	qb::Descriptor* compDescriptor;
 	qb::ComputePipeline* compPipeline;
+	qb::Image* tex2dArrayImg;
 	virtual void onInit() {
 		// vertex
 		std::vector<Vertex> vertices = {
@@ -79,12 +80,22 @@ class Triangle : public qb::App {
 		// push const
 		graphicsPushConstRange = { VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConst) };
 		computePushConstRange = { VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConst) };
-		// image
-		img = this->bufferMgr.getImage("img");
-		img->tex = this->bufferMgr.getTex("./textures/texture.dds");
-		img->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		img->build();
-		img->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		// tex 2d image
+		tex2dImg = this->bufferMgr.getImage("tex2dImg");
+		tex2dImg->tex = this->bufferMgr.getTex("./textures/tex2d.dds");
+		tex2dImg->imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+		tex2dImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		tex2dImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		tex2dImg->build();
+		tex2dImg->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		// tex 2d array image
+		tex2dArrayImg = this->bufferMgr.getImage("tex2dArrayImg");
+		tex2dArrayImg->tex = this->bufferMgr.getTex("./textures/tex2dArray.dds");
+		tex2dArrayImg->imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+		tex2dArrayImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		tex2dArrayImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		tex2dArrayImg->build();
+		tex2dArrayImg->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 		// depth attachment
 		depthImg = this->bufferMgr.getImage("depthImg");
 		depthImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -105,7 +116,7 @@ class Triangle : public qb::App {
 		colorImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		colorImg->build();
 		colorImg->setImageLayout(VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-		// store img
+		// store image
 		storeImg = this->bufferMgr.getImage("storeImg");
 		storeImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
 		storeImg->imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
@@ -119,9 +130,10 @@ class Triangle : public qb::App {
 		descriptor = this->descriptorMgr.getDescriptor("descriptor");
 		descriptor->bindings = {
 			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf},
-			{descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), img},
+			{descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), tex2dImg},
 			{descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, VK_SHADER_STAGE_FRAGMENT_BIT), colorImg},
 			{descriptor_layout_binding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), storeImg},
+			{descriptor_layout_binding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), tex2dArrayImg},
 		};
 		descriptor->buildPerSwapchainImg();
 		// compute descriptor
