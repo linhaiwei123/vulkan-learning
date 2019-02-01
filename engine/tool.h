@@ -16,15 +16,19 @@
 } while(0)
 
 //! vertex desc
-#define vertex_binding_desc(binding, stride, inputRate)\
+#define vertex_desc(T, binding, inputRate, ...)\
 static VkVertexInputBindingDescription getBindingDesc() {\
-	return {binding, stride, inputRate};\
-}
-
-#define vertex_attrib_desc(...)\
+	return {binding, sizeof(T), inputRate};\
+}\
+static uint32_t getBinding() { return binding; }\
 static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
-	std::vector<VkVertexInputAttributeDescription> attrib { __VA_ARGS__ } ;\
-	return attrib;\
+		std::vector <std::tuple<uint32_t, VkFormat, size_t>> attribTemps = {__VA_ARGS__};\
+		std::vector<VkVertexInputAttributeDescription> attribDesc = {};\
+		for(auto& attrib : attribTemps) {\
+			auto& [location, format, offset] = attrib;\
+			attribDesc.push_back({location, binding, format, static_cast<uint32_t>(offset)});\
+		}\
+		return attribDesc;\
 }
 
 //! uniform layout

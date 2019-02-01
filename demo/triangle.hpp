@@ -1,14 +1,14 @@
 #include "../engine/app.h"
+#include <variant>
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 color;
 	glm::vec2 texCoord;
-	vertex_binding_desc(0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX);
-	vertex_attrib_desc(
-		{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos) },
-		{ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) },
-		{ 2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord)}
-		);
+	vertex_desc(Vertex, 0, VK_VERTEX_INPUT_RATE_VERTEX,
+		{ 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, pos) },
+		{ 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) },
+		{ 2, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, texCoord) }
+	);
 };
 
 struct Uniform {
@@ -283,7 +283,7 @@ class Triangle : public qb::App {
 		vkCmdNextSubpass(this->bufferMgr.cmdBuf(i), VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline->pipeline);
 		VkDeviceSize offset = 0;
-		vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), 0, 1, &vertexBuf->buffer(), &offset);
+		vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), Vertex::getBinding(), 1, &vertexBuf->buffer(), &offset);
 		vkCmdBindIndexBuffer(this->bufferMgr.cmdBuf(i), indexBuf->buffer(), 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->pipeline->layout, 0, 1, 
 			&this->descriptor->sets(i), 0, nullptr);
