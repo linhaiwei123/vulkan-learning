@@ -171,6 +171,7 @@
     <ClCompile Include="engine\buffer.cpp" />
     <ClCompile Include="engine\device.cpp" />
     <ClCompile Include="engine\inst.cpp" />
+    <ClCompile Include="engine\model.cpp" />
     <ClCompile Include="engine\pipeline.cpp" />
     <ClCompile Include="engine\renderpass.cpp" />
     <ClCompile Include="engine\surface.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="engine\buffer.h" />
     <ClInclude Include="engine\device.h" />
     <ClInclude Include="engine\inst.h" />
+    <ClInclude Include="engine\model.h" />
     <ClInclude Include="engine\pipeline.h" />
     <ClInclude Include="engine\renderpass.h" />
     <ClInclude Include="engine\surface.h" />

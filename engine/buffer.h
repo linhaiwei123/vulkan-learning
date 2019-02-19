@@ -46,6 +46,8 @@ namespace qb {
 		void destroy();
 
 		Buffer* getBuffer(std::string name);
+		void destroyBuffer(std::string name);
+
 		Image* getImage(std::string name);
 
 		inline VkCommandBuffer cmdBuf(size_t i) { return commandBuffers[i]; };

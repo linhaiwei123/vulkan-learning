@@ -63,6 +63,9 @@
     <ClCompile Include="engine\descriptor.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="engine\model.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\app.h">
@@ -102,6 +105,9 @@
       <Filter>Source Files\demo</Filter>
     </ClInclude>
     <ClInclude Include="engine\descriptor.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\model.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
   </ItemGroup>

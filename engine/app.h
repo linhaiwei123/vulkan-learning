@@ -25,6 +25,7 @@
 #include "sync.h"
 #include "tool.h"
 #include "descriptor.h"
+#include "model.h"
 
 namespace qb {
 	class App {
@@ -39,6 +40,7 @@ namespace qb {
 		BufferMgr bufferMgr;
 		Sync sync;
 		DescriptorMgr descriptorMgr;
+		ModelMgr modelMgr;
 	public:
 		App() {};
 		void run();

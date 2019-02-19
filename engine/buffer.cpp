@@ -103,6 +103,16 @@ qb::Buffer * qb::BufferMgr::getBuffer(std::string name) {
 	return _bufferMap.at(name);
 }
 
+void qb::BufferMgr::destroyBuffer(std::string name){
+	auto it = _bufferMap.find(name);
+	if (it != _bufferMap.end()) {
+		Buffer* buffer = it->second;
+		buffer->destroy();
+		delete it->second;
+		_bufferMap.erase(it);
+	}
+}
+
 qb::Image * qb::BufferMgr::getImage(std::string name) {
 	// read image from cache
 	auto it = _imageMap.find(name);

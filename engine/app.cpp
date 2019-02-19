@@ -16,6 +16,7 @@ void qb::App::init() {
 	log_info("render pass mgr initialize"); this->renderPassMgr.init(this);
 	log_info("buffer mgr initialize"); this->bufferMgr.init(this);
 	log_info("descriptor mgr initialize"); this->descriptorMgr.init(this);
+	log_info("model initialize"); this->modelMgr.init(this);
 	log_info("sync initialize"); this->sync.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
@@ -100,6 +101,7 @@ void qb::App::onDestroy() {
 void qb::App::destroy() {
 	log_info("sub class destroy"); this->onDestroy();
 	log_info("sync destroy"); this->sync.destroy();
+	log_info("model destroy"); this->modelMgr.destroy();
 	log_info("descriptor mgr destroy"); this->descriptorMgr.destroy();
 	log_info("buffer mgr destroy"); this->bufferMgr.destroy();
 	log_info("pipeline mgr destroy"); this->pipelineMgr.destroy();

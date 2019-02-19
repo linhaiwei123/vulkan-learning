@@ -1,7 +1,4 @@
 #include "../engine/app.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 color;
@@ -13,23 +10,17 @@ struct Vertex {
 	);
 };
 
-struct ModelVertex {
-	glm::vec3 pos;
-	glm::vec3 color;
-	glm::vec2 texCoord;
-	glm::vec3 normal;
-	vertex_desc(ModelVertex, 1, VK_VERTEX_INPUT_RATE_VERTEX,
-		{ 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(ModelVertex, pos) },
-		{ 1, VK_FORMAT_R32G32B32_SFLOAT, offsetof(ModelVertex, color) },
-		{ 2, VK_FORMAT_R32G32_SFLOAT, offsetof(ModelVertex, texCoord) },
-		{ 3, VK_FORMAT_R32G32B32_SFLOAT, offsetof(ModelVertex, normal) },
-	);
-};
-
 struct Uniform {
 	alignas(16) glm::mat4 model;
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 proj;
+};
+
+struct ModelUniform {
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
+	glm::mat4 bones[max_bones_per_mesh];
 };
 
 struct PushConst {
@@ -57,56 +48,23 @@ class Triangle : public qb::App {
 	qb::Descriptor* compDescriptor;
 	qb::ComputePipeline* compPipeline;
 	qb::Image* tex2dArrayImg;
-	std::vector<ModelVertex> modelVertices;
-	qb::Buffer* modelVertexBuf;
-	std::vector<uint16_t> modelIndices;
-	qb::Buffer* modelIndexBuf;
+	qb::Model* model;
+	ModelUniform modelUniform;
+	qb::Buffer* modelUniBuf;
+	qb::Descriptor* writeDescriptor;
 	virtual void onInit() {
 		// model
-		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile("./models/monkey.gltf",
-			aiProcess_Triangulate
-		);
-		if (scene == nullptr) {
-			log_error("import model error:%s", importer.GetErrorString());
-			assert(0);
-		}
-		else {
-			// model vertex
-			modelVertices = {};
-			for (size_t m = 0; m < scene->mNumMeshes; m++) {
-				for (size_t v = 0; v < scene->mMeshes[m]->mNumVertices; v++) {
-					ModelVertex modelVertex;
-					modelVertex.pos = glm::make_vec3(&scene->mMeshes[m]->mVertices[v].x);
-					modelVertex.color = (scene->mMeshes[m]->HasVertexColors(0)) ? 
-						glm::make_vec3(&scene->mMeshes[m]->mColors[0][v].r) : glm::vec3(1.0f);
-					modelVertex.texCoord = glm::make_vec2(&scene->mMeshes[m]->mTextureCoords[0][v].x);
-					modelVertex.normal = glm::make_vec3(&scene->mMeshes[m]->mNormals[v].x);
-					modelVertex.pos.y *= -1.0f;
-					modelVertices.push_back(modelVertex);
-				}
-			}
-			modelVertexBuf = this->bufferMgr.getBuffer("modelVertexBuf");
-			modelVertexBuf->bufferInfo.size = sizeof(ModelVertex) * modelVertices.size();
-			modelVertexBuf->bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-			modelVertexBuf->build();
-			modelVertexBuf->mapping(modelVertices.data());
-			// model index
-			modelIndices = {};
-			for (size_t m = 0; m < scene->mNumMeshes; m++) {
-				size_t indexBase = modelIndices.size();
-				for (size_t f = 0; f < scene->mMeshes[m]->mNumFaces; f++) {
-					for (size_t i = 0; i < 3; i++) {
-						modelIndices.push_back(scene->mMeshes[m]->mFaces[f].mIndices[i] + static_cast<uint32_t>(indexBase));
-					}
-				}
-			}
-			modelIndexBuf = this->bufferMgr.getBuffer("modelIndexBuf");
-			modelIndexBuf->bufferInfo.size = sizeof(uint16_t) * modelIndices.size();
-			modelIndexBuf->bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-			modelIndexBuf->build();
-			modelIndexBuf->mapping(modelIndices.data());
-		};
+		model = this->modelMgr.getModel("model");
+		model->scene = this->modelMgr.getAssimpScene("./models/cube.gltf");
+		model->build();
+		model->setAnimation("Action");
+		// model uniform
+		modelUniform = {};
+		modelUniBuf = this->bufferMgr.getBuffer("modelUniBuf");
+		modelUniBuf->bufferInfo.size = sizeof(ModelUniform);
+		modelUniBuf->bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		modelUniBuf->descriptorRange = sizeof(ModelUniform);
+		modelUniBuf->buildPerSwapchainImg();
 		// vertex
 		std::vector<Vertex> vertices = {
 			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -190,6 +148,12 @@ class Triangle : public qb::App {
 		storeImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		storeImg->build();
 		storeImg->setImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
+		// write descriptor
+		writeDescriptor = this->descriptorMgr.getDescriptor("writeDescriptor");
+		writeDescriptor->bindings = {
+			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), modelUniBuf},
+		};
+		writeDescriptor->buildPerSwapchainImg();
 		// descriptor
 		descriptor = this->descriptorMgr.getDescriptor("descriptor");
 		descriptor->bindings = {
@@ -220,7 +184,7 @@ class Triangle : public qb::App {
 			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 			}, // depth attachment desc
 			{0, colorImg->imageInfo.format, VK_SAMPLE_COUNT_1_BIT,
-			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE,
 			VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE,
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			}, // color attachment desc
@@ -284,10 +248,14 @@ class Triangle : public qb::App {
 				this->pipelineMgr.getShaderStage("./shaders/writePipeline.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
 			};
 			writePipeline->vertexInputInfo.vertexBindingDescriptionCount = 1;  // vertex binding
-			writePipeline->vertexInputInfo.pVertexBindingDescriptions = &ModelVertex::getBindingDesc();
-			auto attribDesc = ModelVertex::getAttribDesc();
+			writePipeline->vertexInputInfo.pVertexBindingDescriptions = &qb::ModelVertex::getBindingDesc();
+			auto attribDesc = qb::ModelVertex::getAttribDesc();
 			writePipeline->vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribDesc.size());
 			writePipeline->vertexInputInfo.pVertexAttributeDescriptions = attribDesc.data();
+
+			writePipeline->pipelineLayoutInfo.setLayoutCount = 1; // uniform binding
+			writePipeline->pipelineLayoutInfo.pSetLayouts = &this->writeDescriptor->layout;
+
 			writePipeline->build();
 		}
 		// compute pipeline
@@ -344,7 +312,7 @@ class Triangle : public qb::App {
 		this->renderPass->clearValues = {
 			{0.0f, 0.0f, 0.0f, 1.0f}, // swap chain
 			{1.0f, 0}, // depth stencil
-			{1.0f, 0.0f, 0.0f, 1.0f} // color
+			{0.0f, 0.0f, 0.0f, 1.0f} // color
 		};
 		this->renderPass->begin(i);
 		// sub pass 0
@@ -352,9 +320,11 @@ class Triangle : public qb::App {
 			vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->pipeline);
 			//vkCmdDraw(this->bufferMgr.cmdBuf(i), 3, 1, 0, 0);
 			VkDeviceSize offset = 0;
-			vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), ModelVertex::getBinding(), 1, &modelVertexBuf->buffer(), &offset);
-			vkCmdBindIndexBuffer(this->bufferMgr.cmdBuf(i), modelIndexBuf->buffer(), 0, VK_INDEX_TYPE_UINT16);
-			vkCmdDrawIndexed(this->bufferMgr.cmdBuf(i), static_cast<uint32_t>(modelIndices.size()), 1, 0, 0, 0);
+			vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), qb::ModelVertex::getBinding(), 1, &model->modelVertexBuf->buffer(), &offset);
+			vkCmdBindIndexBuffer(this->bufferMgr.cmdBuf(i), model->modelIndexBuf->buffer(), 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->layout, 0, 1,
+				&this->writeDescriptor->sets(i), 0, nullptr);
+			vkCmdDrawIndexed(this->bufferMgr.cmdBuf(i), static_cast<uint32_t>(model->modelIndices.size()), 1, 0, 0, 0);
 		}
 		// sub pass 1
 		{
@@ -376,11 +346,21 @@ class Triangle : public qb::App {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 		auto currentTime = std::chrono::high_resolution_clock::now();
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-		uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 5.0f));
 		uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 		uniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 
 			0.1f, 10.0f);
 		this->uniBuf->mappingCurSwapchainImg(&uniform);
+
+		// model uniform update
+		model->update(time);
+		for (uint32_t i = 0; i < model->boneTransforms.size(); i++) {
+			modelUniform.bones[i] = glm::transpose(glm::make_mat4(&model->boneTransforms[i].a1));
+		}
+		modelUniform.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+		modelUniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+		modelUniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width,0.1f, 10.0f);
+		modelUniBuf->mappingCurSwapchainImg(&modelUniform);
 
 		// push const update
 		auto cmdBuf = this->bufferMgr.beginOnce();

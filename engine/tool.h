@@ -1,5 +1,7 @@
 #pragma once
-
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 //! log
 // log bg color black = 40,red = 41,green = 42,yellow = 43,blue = 44,purple = 45,dark_green = 46,white = 47
 // log font color black = 30,red = 31,green = 32,yellow = 33,blue = 34,purple = 35,dark_green = 36,white = 37
@@ -33,3 +35,10 @@ static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
 
 //! uniform layout
 #define descriptor_layout_binding(binding,descriptorType,stageFlags) {binding,descriptorType,1,stageFlags,nullptr}
+
+//! vertex binding (0-31)
+#define model_vertex_binding_id 31
+
+//! model 
+#define max_bones_per_mesh 64
+#define max_bones_per_vertex 4
