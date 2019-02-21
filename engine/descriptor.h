@@ -15,7 +15,7 @@ namespace qb {
 	class Buffer;
 	class DescriptorMgr {
 	private:
-		std::unordered_map<std::string, Descriptor*>  _descriptorMap;
+		std::unordered_map<std::string, qb::Descriptor*>  _descriptorMap;
 	public:
 		App *app;
 		VkDescriptorPool descriptorPool;

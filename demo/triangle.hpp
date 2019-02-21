@@ -16,13 +16,6 @@ struct Uniform {
 	alignas(16) glm::mat4 proj;
 };
 
-struct ModelUniform {
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-	glm::mat4 bones[max_bones_per_mesh];
-};
-
 struct PushConst {
 	glm::vec2 speed;
 };
@@ -49,22 +42,12 @@ class Triangle : public qb::App {
 	qb::ComputePipeline* compPipeline;
 	qb::Image* tex2dArrayImg;
 	qb::Model* model;
-	ModelUniform modelUniform;
-	qb::Buffer* modelUniBuf;
-	qb::Descriptor* writeDescriptor;
 	virtual void onInit() {
-		// model
+		//model
 		model = this->modelMgr.getModel("model");
-		model->scene = this->modelMgr.getAssimpScene("./models/cube.gltf");
+		model->gltf = this->modelMgr.getGltf("./models/cube.gltf");
 		model->build();
 		model->setAnimation("Action");
-		// model uniform
-		modelUniform = {};
-		modelUniBuf = this->bufferMgr.getBuffer("modelUniBuf");
-		modelUniBuf->bufferInfo.size = sizeof(ModelUniform);
-		modelUniBuf->bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-		modelUniBuf->descriptorRange = sizeof(ModelUniform);
-		modelUniBuf->buildPerSwapchainImg();
 		// vertex
 		std::vector<Vertex> vertices = {
 			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
@@ -148,12 +131,6 @@ class Triangle : public qb::App {
 		storeImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		storeImg->build();
 		storeImg->setImageLayout(VK_IMAGE_LAYOUT_GENERAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT);
-		// write descriptor
-		writeDescriptor = this->descriptorMgr.getDescriptor("writeDescriptor");
-		writeDescriptor->bindings = {
-			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), modelUniBuf},
-		};
-		writeDescriptor->buildPerSwapchainImg();
 		// descriptor
 		descriptor = this->descriptorMgr.getDescriptor("descriptor");
 		descriptor->bindings = {
@@ -248,13 +225,13 @@ class Triangle : public qb::App {
 				this->pipelineMgr.getShaderStage("./shaders/writePipeline.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT),
 			};
 			writePipeline->vertexInputInfo.vertexBindingDescriptionCount = 1;  // vertex binding
-			writePipeline->vertexInputInfo.pVertexBindingDescriptions = &qb::ModelVertex::getBindingDesc();
-			auto attribDesc = qb::ModelVertex::getAttribDesc();
+			writePipeline->vertexInputInfo.pVertexBindingDescriptions = &qb::Model::Vertex::getBindingDesc();
+			auto attribDesc = qb::Model::Vertex::getAttribDesc();
 			writePipeline->vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribDesc.size());
 			writePipeline->vertexInputInfo.pVertexAttributeDescriptions = attribDesc.data();
 
-			writePipeline->pipelineLayoutInfo.setLayoutCount = 1; // uniform binding
-			writePipeline->pipelineLayoutInfo.pSetLayouts = &this->writeDescriptor->layout;
+			writePipeline->pipelineLayoutInfo.setLayoutCount = 1;
+			writePipeline->pipelineLayoutInfo.pSetLayouts = &model->linearMeshes[0]->descriptor->layout;
 
 			writePipeline->build();
 		}
@@ -318,13 +295,15 @@ class Triangle : public qb::App {
 		// sub pass 0
 		{
 			vkCmdBindPipeline(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->pipeline);
-			//vkCmdDraw(this->bufferMgr.cmdBuf(i), 3, 1, 0, 0);
 			VkDeviceSize offset = 0;
-			vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), qb::ModelVertex::getBinding(), 1, &model->modelVertexBuf->buffer(), &offset);
-			vkCmdBindIndexBuffer(this->bufferMgr.cmdBuf(i), model->modelIndexBuf->buffer(), 0, VK_INDEX_TYPE_UINT16);
-			vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->layout, 0, 1,
-				&this->writeDescriptor->sets(i), 0, nullptr);
-			vkCmdDrawIndexed(this->bufferMgr.cmdBuf(i), static_cast<uint32_t>(model->modelIndices.size()), 1, 0, 0, 0);
+			vkCmdBindVertexBuffers(this->bufferMgr.cmdBuf(i), qb::Model::Vertex::getBinding(), 1, &model->vertexBuf->buffer(), &offset);
+			vkCmdBindIndexBuffer(this->bufferMgr.cmdBuf(i), model->indexBuf->buffer(), 0, VK_INDEX_TYPE_UINT32);
+			for (auto& mesh : model->linearMeshes) {
+				vkCmdBindDescriptorSets(this->bufferMgr.cmdBuf(i), VK_PIPELINE_BIND_POINT_GRAPHICS, this->writePipeline->layout, 0, 1, &mesh->descriptor->sets(i), 0, nullptr);
+				for (auto& primitive : mesh->primitives) {
+					vkCmdDrawIndexed(this->bufferMgr.cmdBuf(i), primitive->indexCount, 1, primitive->firstIndex, 0, 0);
+				}
+			}
 		}
 		// sub pass 1
 		{
@@ -348,19 +327,15 @@ class Triangle : public qb::App {
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 		uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 5.0f));
 		uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-		uniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 
-			0.1f, 10.0f);
+		uniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 0.1f, 10.0f);
 		this->uniBuf->mappingCurSwapchainImg(&uniform);
 
-		// model uniform update
-		model->update(time);
-		for (uint32_t i = 0; i < model->boneTransforms.size(); i++) {
-			modelUniform.bones[i] = glm::transpose(glm::make_mat4(&model->boneTransforms[i].a1));
-		}
-		modelUniform.model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
-		modelUniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
-		modelUniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width,0.1f, 10.0f);
-		modelUniBuf->mappingCurSwapchainImg(&modelUniform);
+		// mode update
+		glm::mat4 modelM = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f)) * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		glm::mat4 modelV = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
+		glm::mat4 modelP = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 0.1f, 10.0f);
+		model->rootNode->mat = modelP * modelV * modelM;
+		model->updateAnimation(time);
 
 		// push const update
 		auto cmdBuf = this->bufferMgr.beginOnce();

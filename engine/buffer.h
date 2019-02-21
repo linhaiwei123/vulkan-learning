@@ -17,8 +17,8 @@ namespace qb {
 	class Image;
 	class BufferMgr {
 	private:
-		std::unordered_map<std::string, Buffer*> _bufferMap{};
-		std::unordered_map<std::string, Image*> _imageMap{};
+		std::unordered_map<std::string, qb::Buffer*> _bufferMap{};
+		std::unordered_map<std::string, qb::Image*> _imageMap{};
 		std::unordered_map <std::string, gli::texture*> _texMap{}; //TODO other texture format cache
 	public:
 		App *app;
@@ -71,22 +71,23 @@ namespace qb {
 		void build(size_t count=1);
 		void buildPerSwapchainImg();
 		
-		void mapping(void* data, size_t i=0);
-		void mappingCurSwapchainImg(void* data);
+		void mapping(void* data, size_t i=0, size_t offset=0, size_t size=0);
+
+		void mappingCurSwapchainImg(void* data, size_t offset=0, size_t size=0);
 		
 		void destroy();
 
 		inline VkBuffer& buffer(int i = 0) { return buffers[i]; };
 		inline VkDeviceMemory& mem(int i = 0) { return mems[i]; };
 
-		void copyToImage(Image* img);
+		void copyToImage(qb::Image* img);
 	};
 
 	class Image {
 	private:
 		App* app;
 		std::string name;
-		Buffer* stageBuffer;
+		qb::Buffer* stageBuffer;
 		VkImageLayout _imgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	public:
 		VkImageCreateInfo imageInfo{};

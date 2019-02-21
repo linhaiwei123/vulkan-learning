@@ -108,14 +108,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\stb;F:\Vulkan\tinyobjloader;F:\Vulkan\gli;F:\Vulkan\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\assimp\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy.exe "F:\Vulkan\assimp\lib\Debug\assimp-vc140-mt.dll" "$(OutDir)"</Command>
@@ -151,7 +151,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\stb;F:\Vulkan\tinyobjloader;F:\Vulkan\gli;F:\Vulkan\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -159,8 +159,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\assimp\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy.exe "F:\Vulkan\assimp\lib\Debug\assimp-vc140-mt.dll" "$(OutDir)"</Command>

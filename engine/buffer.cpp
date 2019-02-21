@@ -175,17 +175,18 @@ void qb::Buffer::buildPerSwapchainImg(){
 	this->build(app->swapchain.views.size());
 }
 
-void qb::Buffer::mapping(void * data, size_t i) {
+void qb::Buffer::mapping(void * data, size_t i, size_t offset, size_t size) {
+	size_t bufferInfoSize = size != 0 ? size : bufferInfo.size;
 	assert(i >= 0);
 	assert(i < buffers.size());
 	void* addr;
-	vkMapMemory(app->device.logical, mems[i], 0, bufferInfo.size, 0, &addr);
-	memcpy(addr, data, bufferInfo.size);
+	vkMapMemory(app->device.logical, mems[i], offset, bufferInfoSize, 0, &addr);
+	memcpy(addr, data, bufferInfoSize);
 	vkUnmapMemory(app->device.logical, mems[i]);
 }
 
-void qb::Buffer::mappingCurSwapchainImg(void * data){
-	mapping(data, this->app->sync.currentImage);
+void qb::Buffer::mappingCurSwapchainImg(void * data, size_t offset, size_t size){
+	mapping(data, this->app->sync.currentImage, offset, size);
 }
 
 void qb::Buffer::destroy() {
@@ -228,7 +229,7 @@ void qb::BufferMgr::endOnce(VkCommandBuffer cmdBuf) {
 	vkFreeCommandBuffers(app->device.logical, app->bufferMgr.commandPool, 1, &cmdBuf);
 }
 
-void qb::Buffer::copyToImage(Image * img){
+void qb::Buffer::copyToImage(qb::Image * img){
 	assert(img != nullptr);
 	gli::texture* tex = img->tex;
 	assert(tex != nullptr);
