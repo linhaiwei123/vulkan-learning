@@ -42,7 +42,14 @@ class Triangle : public qb::App {
 	qb::ComputePipeline* compPipeline;
 	qb::Image* tex2dArrayImg;
 	qb::Model* model;
+	physx::PxRigidStatic* pxGroundPlane;
+	physx::PxRigidDynamic* pxCube;
 	virtual void onInit() {
+		//physics
+		pxGroundPlane = physx::PxCreatePlane(*this->physics.pxPhysics, physx::PxPlane(0.0f, 1.0f, 0.0f, 0.0f), *this->physics.pxMaterial);
+		this->physics.pxScene->addActor(*pxGroundPlane);
+		pxCube = physx::PxCreateDynamic(*this->physics.pxPhysics, physx::PxTransform(physx::PxVec3(0, 50, 0)), physx::PxSphereGeometry(1), *this->physics.pxMaterial, 10.0f);
+		this->physics.pxScene->addActor(*pxCube);
 		//model
 		model = this->modelMgr.getModel("model");
 		model->gltf = this->modelMgr.getGltf("./models/cube.gltf");
@@ -330,11 +337,18 @@ class Triangle : public qb::App {
 		uniform.proj = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 0.1f, 10.0f);
 		this->uniBuf->mappingCurSwapchainImg(&uniform);
 
-		// mode update
+		// physical update
+		physx::PxShape* shapes[1];
+		const physx::PxU32 nbShapes = pxCube->getNbShapes();
+		pxCube->getShapes(shapes, nbShapes);
+		const physx::PxMat44 shapePose(physx::PxShapeExt::getGlobalPose(*shapes[0], *pxCube));
+		glm::mat4 matPx = glm::make_mat4(shapePose.front());
+
+		// model update
 		glm::mat4 modelM = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 		glm::mat4 modelV = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 		glm::mat4 modelP = glm::perspective(glm::radians(45.0f), (float)this->swapchain.extent.width / (float)this->swapchain.extent.width, 0.1f, 10.0f);
-		model->rootNode->mat = modelP * modelV * modelM;
+		model->rootNode->mat = modelP * modelV * modelM * matPx;
 		model->updateAnimation(time);
 
 		// push const update

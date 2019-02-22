@@ -66,7 +66,7 @@ void qb::Model::_loadNode(qb::Model::Node * parent, const tinygltf::Node & node,
 	}
 	glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	if (node.rotation.size() == 4) {
-		glm::quat q = glm::quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+		glm::quat q = glm::quat((float)node.rotation[3], (float)node.rotation[0], (float)node.rotation[1], (float)node.rotation[2]);
 		newNode->rotation = q;
 	}
 	glm::vec3 scale = glm::vec3(1.0f);

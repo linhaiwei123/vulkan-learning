@@ -18,11 +18,13 @@ void qb::App::init() {
 	log_info("descriptor mgr initialize"); this->descriptorMgr.init(this);
 	log_info("model initialize"); this->modelMgr.init(this);
 	log_info("sync initialize"); this->sync.init(this);
+	log_info("physics initialize"); this->physics.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
 void qb::App::loop() {
 	this->win.mainLoop([this](){
+		this->physics.step(1.0f / 60.0f);
 		this->draw();
 	});
 }
@@ -100,6 +102,7 @@ void qb::App::onDestroy() {
 
 void qb::App::destroy() {
 	log_info("sub class destroy"); this->onDestroy();
+	log_info("physics destroy") this->physics.destroy();
 	log_info("sync destroy"); this->sync.destroy();
 	log_info("model destroy"); this->modelMgr.destroy();
 	log_info("descriptor mgr destroy"); this->descriptorMgr.destroy();

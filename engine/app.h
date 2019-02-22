@@ -26,6 +26,7 @@
 #include "tool.h"
 #include "descriptor.h"
 #include "model.h"
+#include "physics.h"
 
 namespace qb {
 	class App {
@@ -41,6 +42,7 @@ namespace qb {
 		Sync sync;
 		DescriptorMgr descriptorMgr;
 		ModelMgr modelMgr;
+		Physics physics;
 	public:
 		App() {};
 		void run();
