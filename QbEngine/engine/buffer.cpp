@@ -129,7 +129,8 @@ gli::texture* qb::BufferMgr::getTex(std::string name){
 	auto it = _texMap.find(name);
 	if (it != _texMap.end())
 		return it->second;
-	gli::texture* tex = new gli::texture(gli::load(name));
+	auto path = get_asset_full_path(name);
+	gli::texture* tex = new gli::texture(gli::load(path));
 	assert(!tex->empty());
 	_texMap.insert({ name, tex });
 	return _texMap.at(name);

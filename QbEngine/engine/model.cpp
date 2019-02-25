@@ -15,7 +15,8 @@ tinygltf::Model * qb::ModelMgr::getGltf(const std::string name){
 	std::string err;
 	std::string warn;
 	tinygltf::Model* model = new tinygltf::Model();
-	bool ret = _loader.LoadASCIIFromFile(model, &err, &warn, name);
+	auto path = get_asset_full_path(name);
+	bool ret = _loader.LoadASCIIFromFile(model, &err, &warn, path);
 	if (!warn.empty()) {
 		log_warning("%s", warn.c_str());
 	}

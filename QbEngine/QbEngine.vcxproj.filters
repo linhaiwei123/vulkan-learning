@@ -16,17 +16,8 @@
     <Filter Include="Source Files\engine">
       <UniqueIdentifier>{fd99661e-45aa-44ea-bc91-23e4bd014990}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\demo">
-      <UniqueIdentifier>{5e825f0c-12aa-48ab-92db-526f37056673}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\shaders">
-      <UniqueIdentifier>{af3381df-5368-4f27-b1ac-45baccb38118}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="entry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="engine\app.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
@@ -104,9 +95,6 @@
     <ClInclude Include="engine\win.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="demo\triangle.hpp">
-      <Filter>Source Files\demo</Filter>
-    </ClInclude>
     <ClInclude Include="engine\descriptor.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
@@ -116,22 +104,5 @@
     <ClInclude Include="engine\physics.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\triangle.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\triangle.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\writePipeline.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\writePipeline.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shaders\compute.comp">
-      <Filter>Source Files\shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

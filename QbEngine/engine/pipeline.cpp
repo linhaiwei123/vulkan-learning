@@ -2,7 +2,8 @@
 #include "app.h"
 
 std::vector<char> qb::PipelineMgr::_readShaderCode(const std::string filename) {
-	std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	auto path = get_asset_full_path(filename);
+	std::ifstream file(path, std::ios::ate | std::ios::binary);
 	assert(file.is_open());
 	size_t fileSize = (size_t)file.tellg();
 	std::vector<char> buffer(fileSize);

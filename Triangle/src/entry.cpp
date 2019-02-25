@@ -1,4 +1,4 @@
-#include "demo/triangle.hpp"
+#include "./triangle.hpp"
 
 int main() {
 	Triangle app;

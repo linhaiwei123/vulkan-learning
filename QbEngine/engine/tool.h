@@ -42,3 +42,7 @@ static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
 //! model 
 #define max_bones_per_mesh 64
 #define max_bones_per_vertex 4
+
+//! asset (temp)
+#define asset_base_path "F:/Vulkan/projects/res/"
+#define get_asset_full_path(name) asset_base_path + name

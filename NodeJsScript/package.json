@@ -1,0 +1,12 @@
+{
+  "name": "node-js-script",
+  "version": "0.0.0",
+  "description": "NodeJsScript",
+  "main": "app.js",
+  "author": {
+    "name": ""
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.14"
+  }
+}
