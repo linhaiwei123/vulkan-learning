@@ -1,0 +1,15 @@
+{
+  "name": "qb-engine-editor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "qbkivlin",
+  "license": "ISC",
+  "devDependencies": {},
+  "dependencies": {
+    "electron": "^4.0.3"
+  }
+}
