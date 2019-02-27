@@ -164,7 +164,7 @@ qb::Text* qb::Font::getText(std::string content){
 
 void qb::Font::destroy(){
 	for (auto& it : _characterMap) {
-		/*it.second->img = nullptr;*/
+		it.second->img = nullptr;
 		delete it.second;
 	}
 
@@ -216,11 +216,11 @@ void qb::Text::build(){
 }
 
 void qb::Text::destroy(){
-	/*for (auto& it : characters)
+	for (auto& it : characters)
 		it = nullptr;
 	for (auto& it : uniBufs)
 		it = nullptr;
 	for (auto& it : descriptors)
 		it = nullptr;
-	this->mvpUniBuf = nullptr;*/
+	this->mvpUniBuf = nullptr;
 }
