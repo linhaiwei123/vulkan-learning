@@ -46,3 +46,6 @@ static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
 //! asset (temp)
 #define asset_base_path "F:/Vulkan/projects/res/"
 #define get_asset_full_path(name) asset_base_path + name
+
+//! align
+#define align_to_mul(size, align)  ((size + align - 1) & ~(align - 1))

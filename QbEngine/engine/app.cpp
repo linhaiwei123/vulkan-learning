@@ -19,6 +19,7 @@ void qb::App::init() {
 	log_info("model initialize"); this->modelMgr.init(this);
 	log_info("sync initialize"); this->sync.init(this);
 	log_info("physics initialize"); this->physics.init(this);
+	log_info("font initialize") this->fontMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
@@ -102,6 +103,7 @@ void qb::App::onDestroy() {
 
 void qb::App::destroy() {
 	log_info("sub class destroy"); this->onDestroy();
+	log_info("font destroy") this->fontMgr.destroy();
 	log_info("physics destroy") this->physics.destroy();
 	log_info("sync destroy"); this->sync.destroy();
 	log_info("model destroy"); this->modelMgr.destroy();

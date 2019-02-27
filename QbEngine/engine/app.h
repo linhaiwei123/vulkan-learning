@@ -27,6 +27,7 @@
 #include "descriptor.h"
 #include "model.h"
 #include "physics.h"
+#include "font.h"
 
 namespace qb {
 	class App {
@@ -43,6 +44,7 @@ namespace qb {
 		DescriptorMgr descriptorMgr;
 		ModelMgr modelMgr;
 		Physics physics;
+		FontMgr fontMgr;
 	public:
 		App() {};
 		void run();

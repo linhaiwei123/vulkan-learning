@@ -32,9 +32,6 @@ void qb::BufferMgr::build() {
 	framebuffers.resize(app->swapchain.views.size());
 	// frame buffer create
 	for (size_t i = 0; i < framebuffers.size(); i++) {
-		//std::vector<VkImageView> attachments = {  //TODO separate attachments binding
-		//	app->swapchain.views[i]
-		//};
 		assert(onAttachments != nullptr);
 		std::vector<VkImageView> attachments = onAttachments(i);
 		assert(attachments.size() != 0);
@@ -80,7 +77,7 @@ void qb::BufferMgr::destroy() {
 		delete it->second;
 	}
 
-	//texture2d destroy
+	//texture destroy
 	for (auto&it : _texMap)
 		delete it.second;
 
@@ -148,6 +145,7 @@ void qb::Buffer::build(size_t count) {
 	assert(count >= 1);
 	assert(bufferInfo.usage != VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM);
 	assert(bufferInfo.size != std::numeric_limits<uint64_t>::max());
+	// app->bufferMgr.destroyBuffer(this->name);
 	buffers.resize(count);
 	mems.resize(count);
 	for (size_t i = 0; i < count; i++) {
@@ -232,22 +230,22 @@ void qb::BufferMgr::endOnce(VkCommandBuffer cmdBuf) {
 
 void qb::Buffer::copyToImage(qb::Image * img){
 	assert(img != nullptr);
-	gli::texture* tex = img->tex;
-	assert(tex != nullptr);
 	// copy buffer to image
-	std::vector<VkBufferImageCopy> bufferCopyRegions(static_cast<uint32_t>(tex->levels()));
-	uint32_t offset = 0;
+	std::vector<VkBufferImageCopy> bufferCopyRegions(static_cast<uint32_t>(img->imageInfo.mipLevels));
+	uint64_t offset = 0;
+	uint32_t extentFactor = 1;
 	for (uint32_t i = 0; i < bufferCopyRegions.size(); i++) {
 		VkBufferImageCopy& bufferCopyRegion = bufferCopyRegions[i];
 		bufferCopyRegion.imageSubresource.aspectMask = img->viewInfo.subresourceRange.aspectMask;
 		bufferCopyRegion.imageSubresource.mipLevel = i;
-		bufferCopyRegion.imageSubresource.baseArrayLayer = static_cast<uint32_t>(tex->base_layer());
-		bufferCopyRegion.imageSubresource.layerCount = static_cast<uint32_t>(tex->layers());
-		bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(tex->extent(i).x);
-		bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(tex->extent(i).y);
-		bufferCopyRegion.imageExtent.depth = static_cast<uint32_t>(tex->extent(i).z);
+		bufferCopyRegion.imageSubresource.baseArrayLayer = static_cast<uint32_t>(img->viewInfo.subresourceRange.baseArrayLayer);
+		bufferCopyRegion.imageSubresource.layerCount = static_cast<uint32_t>(img->viewInfo.subresourceRange.layerCount);
+		bufferCopyRegion.imageExtent.width = static_cast<uint32_t>(std::max((uint32_t)1, img->imageInfo.extent.width / extentFactor));
+		bufferCopyRegion.imageExtent.height = static_cast<uint32_t>(std::max((uint32_t)1,img->imageInfo.extent.height / extentFactor));
+		bufferCopyRegion.imageExtent.depth = static_cast<uint32_t>(std::max((uint32_t)1,img->imageInfo.extent.depth / extentFactor));
 		bufferCopyRegion.bufferOffset = offset;
-		offset += static_cast<uint32_t>(tex->size(i));
+		offset += std::max((uint32_t)img->texelAlign,bufferCopyRegion.imageExtent.width * bufferCopyRegion.imageExtent.height * bufferCopyRegion.imageExtent.depth);
+		extentFactor *= 2;
 	}
 
 	// begin cmd
@@ -311,6 +309,10 @@ void qb::Image::init(App * app, std::string name){
 	descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_MAX_ENUM; // init outside
 	descriptorImageInfo.imageView = VK_NULL_HANDLE;// init inside
 	descriptorImageInfo.sampler = VK_NULL_HANDLE; // init inside
+
+	// stage buffer
+	this->stageBuffer = app->bufferMgr.getBuffer("$tex_" + name);
+	this->stageBuffer->bufferInfo.size = 0;
 }
 
 void qb::Image::build() {
@@ -345,6 +347,10 @@ void qb::Image::build() {
 	assert(imageInfo.initialLayout != VK_IMAGE_LAYOUT_MAX_ENUM); // init outside 
 	assert(imageInfo.usage != VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM); // init outside
 	vk_check(vkCreateImage(app->device.logical, &imageInfo, nullptr, &image));
+
+	// texel align
+	this->texelAlign = _getTexelAlign();
+
 	// memory
 	mem = app->device.allocImageMemory(image,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -357,12 +363,7 @@ void qb::Image::build() {
 
 	// stage buffer
 	if (tex != nullptr) {
-		this->stageBuffer = app->bufferMgr.getBuffer("$tex_" + name);
-		this->stageBuffer->bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		this->stageBuffer->bufferInfo.size = tex->size();
-		this->stageBuffer->build();
-		this->stageBuffer->mapping(tex->data());
-		this->stageBuffer->copyToImage(this);
+		this->mapping(tex->data(), tex->size());
 	}
 
 	// sampler
@@ -372,6 +373,20 @@ void qb::Image::build() {
 	assert(descriptorImageInfo.imageLayout != VK_IMAGE_LAYOUT_MAX_ENUM); // init outside
 	descriptorImageInfo.imageView = view; // init inside
 	descriptorImageInfo.sampler = sampler; // init inside
+
+}
+
+void qb::Image::mapping(void * data, size_t size){
+	this->stageBuffer->bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	if (size == 0) {
+		assert(this->stageBuffer->bufferInfo.size != 0);
+	}
+	else {
+		this->stageBuffer->bufferInfo.size = size;
+	}
+	this->stageBuffer->build();
+	this->stageBuffer->mapping(data);
+	this->stageBuffer->copyToImage(this);
 }
 
 VkImageType qb::Image::_getImageTypeFromTex(){
@@ -455,6 +470,20 @@ VkComponentMapping qb::Image::_getImageViewComponentMappingFromTex(){
 		switchMapping(swizzles.b),
 		switchMapping(swizzles.a),
 	};
+}
+
+size_t qb::Image::_getTexelAlign(){
+	switch (imageInfo.imageType) {
+	case VkImageType::VK_IMAGE_TYPE_1D:
+		return 4;
+	case VkImageType::VK_IMAGE_TYPE_2D:
+		return 16;
+	case VkImageType::VK_IMAGE_TYPE_3D:
+		return 64;
+	default:
+		assert(0);
+		return -1;
+	}
 }
 
 void qb::Image::destroy(){

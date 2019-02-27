@@ -16,7 +16,7 @@
     <RootNamespace>NodeJsBinding</RootNamespace>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -48,15 +48,16 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\8.12.0\include\node;C:\Users\kivlin\.node-gyp\8.12.0\src;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\uv\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\zlib;C:\Users\kivlin\.node-gyp\8.12.0\deps\v8\include;F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\projects\Triangle\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/bigobj /MP %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\projects\Triangle\src;F:\Vulkan\freetype-2.9.1\include</AdditionalIncludeDirectories>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4267;4351;4355;4800;4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <DisableSpecificWarnings>4351;4355;4800;4251;4275;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>false</OmitFramePointers>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -69,7 +70,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\8.12.0\x64\node.lib";vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\10.11.0\x64\node.lib";vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4199 %(AdditionalOptions)</AdditionalOptions>
       <AllowIsolation>true</AllowIsolation>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -82,26 +83,27 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetExt>.node</TargetExt>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\8.12.0\include\node;C:\Users\kivlin\.node-gyp\8.12.0\src;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\uv\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\zlib;C:\Users\kivlin\.node-gyp\8.12.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=NodeJsBinding;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;BUILDING_NODE_EXTENSION;DEBUG;_DEBUG;V8_ENABLE_CHECKS;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\8.12.0\include\node;C:\Users\kivlin\.node-gyp\8.12.0\src;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\uv\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\zlib;C:\Users\kivlin\.node-gyp\8.12.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/MP %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions)</AdditionalOptions>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>4267;4351;4355;4800;4251;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <DisableSpecificWarnings>4351;4355;4800;4251;4275;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>true</OmitFramePointers>
       <Optimization>Full</Optimization>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -115,18 +117,17 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
     </ClCompile>
     <Lib>
-      <AdditionalOptions>/LTCG %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/LTCG:INCREMENTAL %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\8.12.0\x64\node.lib"</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4199 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\10.11.0\x64\node.lib"</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4199 /LTCG:INCREMENTAL %(AdditionalOptions)</AdditionalOptions>
       <AllowIsolation>true</AllowIsolation>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <DelayLoadDLLs>iojs.exe;node.exe;%(DelayLoadDLLs)</DelayLoadDLLs>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <MapExports>true</MapExports>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(OutDir)$(ProjectName).node</OutputFile>
@@ -136,7 +137,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\8.12.0\include\node;C:\Users\kivlin\.node-gyp\8.12.0\src;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\8.12.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\uv\include;C:\Users\kivlin\.node-gyp\8.12.0\deps\zlib;C:\Users\kivlin\.node-gyp\8.12.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NODE_GYP_MODULE_NAME=NodeJsBinding;USING_UV_SHARED=1;USING_V8_SHARED=1;V8_DEPRECATION_WARNINGS=1;WIN32;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_HAS_EXCEPTIONS=0;BUILDING_NODE_EXTENSION;%(PreprocessorDefinitions);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>

@@ -16,6 +16,9 @@
     <Filter Include="Source Files\src">
       <UniqueIdentifier>{e8403139-4440-4949-b907-73086f6c37e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\shaders">
+      <UniqueIdentifier>{3ce3ee25-c8db-4ec8-936e-37e3e6a5f368}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\entry.cpp">
@@ -26,5 +29,28 @@
     <ClInclude Include="src\Triangle.hpp">
       <Filter>Source Files\src</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\shaders\compute.comp">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\triangle.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\triangle.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\writePipeline.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\writePipeline.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\fontPipeline.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\fontPipeline.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

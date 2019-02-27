@@ -19,7 +19,7 @@ namespace qb {
 	private:
 		std::unordered_map<std::string, qb::Buffer*> _bufferMap{};
 		std::unordered_map<std::string, qb::Image*> _imageMap{};
-		std::unordered_map <std::string, gli::texture*> _texMap{}; //TODO other texture format cache
+		std::unordered_map <std::string, gli::texture*> _texMap{}; 
 	public:
 		App *app;
 		std::vector<VkFramebuffer> framebuffers;
@@ -90,6 +90,7 @@ namespace qb {
 		qb::Buffer* stageBuffer;
 		VkImageLayout _imgLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	public:
+		size_t texelAlign = 0;
 		VkImageCreateInfo imageInfo{};
 		VkImageViewCreateInfo viewInfo{};
 		VkSamplerCreateInfo samplerInfo{};
@@ -103,10 +104,13 @@ namespace qb {
 		VkImageType _getImageTypeFromTex();
 		VkImageViewType _getImageViewTypeFromTex();
 		VkComponentMapping _getImageViewComponentMappingFromTex();
+		size_t _getTexelAlign();
 	public:
 		void init(App* app, std::string name);
 
 		void build();
+
+		void mapping(void* data, size_t size=0);
 
 		void destroy();
 

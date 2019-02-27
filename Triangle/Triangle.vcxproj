@@ -24,6 +24,27 @@
   <ItemGroup>
     <ClInclude Include="src\Triangle.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\shaders\compute.comp" />
+    <None Include="..\res\shaders\fontPipeline.frag" />
+    <None Include="..\res\shaders\triangle.frag" />
+    <None Include="..\res\shaders\triangle.vert" />
+    <None Include="..\res\shaders\writePipeline.frag" />
+    <None Include="..\res\shaders\writePipeline.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\shaders\fontPipeline.vert">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{EE5C57AA-605E-48A3-8BD2-D3ED54C905D2}</ProjectGuid>
@@ -101,14 +122,14 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile />
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

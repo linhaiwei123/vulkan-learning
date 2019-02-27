@@ -5,7 +5,7 @@ void qb::DescriptorMgr::init(App *app) {
 	this->app = app;
 
 	//descriptor pool
-	uint32_t descriptorCount = static_cast<uint32_t>(app->swapchain.views.size()) * 8;
+	uint32_t descriptorCount = static_cast<uint32_t>(app->swapchain.views.size()) * 1000;
 	std::vector<VkDescriptorPoolSize> poolSizes = {
 		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount},
 		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount},
