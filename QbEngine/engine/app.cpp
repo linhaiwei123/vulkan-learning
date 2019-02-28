@@ -8,7 +8,6 @@ void qb::App::run() {
 void qb::App::init() {
 	
 	log_info("win initialize"); this->win.init(this);
-	log_info("input initialize"); this->inputMgr.init(this);
 	log_info("inst initialize"); this->inst.init(this);
 	log_info("surf initialize"); this->surf.init(this);
 	log_info("device initialize"); this->device.init(this);
@@ -22,6 +21,7 @@ void qb::App::init() {
 	log_info("physics initialize"); this->physics.init(this);
 	log_info("font initialize") this->fontMgr.init(this);
 	log_info("audio initialize") this->audioMgr.init(this);
+	log_info("input initialize"); this->inputMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
