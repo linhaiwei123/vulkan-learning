@@ -112,15 +112,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\freetype-2.9.1\include;F:\Fmod\FMOD_Studio_API_Windows\api\studio\inc;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Python2.7\libs;F:\Vulkan\freetype-2.9.1\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Python2.7\libs;F:\Vulkan\freetype-2.9.1\build\Debug;F:\Fmod\FMOD_Studio_API_Windows\api\studio\lib;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;freetyped.lib;fmodstudio64_vc.lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
@@ -175,6 +175,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="engine\app.cpp" />
+    <ClCompile Include="engine\audio.cpp" />
     <ClCompile Include="engine\buffer.cpp" />
     <ClCompile Include="engine\device.cpp" />
     <ClCompile Include="engine\font.cpp" />
@@ -192,6 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\app.h" />
+    <ClInclude Include="engine\audio.h" />
     <ClInclude Include="engine\buffer.h" />
     <ClInclude Include="engine\device.h" />
     <ClInclude Include="engine\font.h" />

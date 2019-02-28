@@ -20,13 +20,15 @@ void qb::App::init() {
 	log_info("sync initialize"); this->sync.init(this);
 	log_info("physics initialize"); this->physics.init(this);
 	log_info("font initialize") this->fontMgr.init(this);
+	log_info("audio initialize") this->audioMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
 void qb::App::loop() {
 	this->win.mainLoop([this](){
-		this->physics.step(1.0f / 60.0f);
-		this->draw();
+		this->physics.step(1.0f / 60.0f); // physics update
+		this->audioMgr.update(); // audio update
+		this->draw(); // logic + render update
 	});
 }
 
@@ -103,6 +105,7 @@ void qb::App::onDestroy() {
 
 void qb::App::destroy() {
 	log_info("sub class destroy"); this->onDestroy();
+	log_info("audio destroy") this->audioMgr.destroy();
 	log_info("font destroy") this->fontMgr.destroy();
 	log_info("physics destroy") this->physics.destroy();
 	log_info("sync destroy"); this->sync.destroy();

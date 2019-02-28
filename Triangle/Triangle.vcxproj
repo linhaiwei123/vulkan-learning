@@ -122,14 +122,14 @@
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile />
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\freetype-2.9.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\freetype-2.9.1\include;F:\Fmod\FMOD_Studio_API_Windows\api\studio\inc;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;fmodstudio64_vc.lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;F:\Fmod\FMOD_Studio_API_Windows\api\studio\lib;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

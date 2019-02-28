@@ -63,6 +63,9 @@
     <ClCompile Include="engine\font.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="engine\audio.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\app.h">
@@ -108,6 +111,9 @@
       <Filter>Source Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\font.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\audio.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
   </ItemGroup>

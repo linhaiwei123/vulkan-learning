@@ -48,7 +48,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\projects\Triangle\src;F:\Vulkan\freetype-2.9.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\projects\QbEngine\engine;F:\Vulkan\projects\Triangle\src;F:\Vulkan\freetype-2.9.1\include;F:\Fmod\FMOD_Studio_API_Windows\api\studio\inc;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <BufferSecurityCheck>true</BufferSecurityCheck>
@@ -70,7 +70,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\10.11.0\x64\node.lib";vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;DelayImp.lib;"C:\Users\kivlin\.node-gyp\10.11.0\x64\node.lib";vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;QbEngine.lib;freetyped.lib;fmodstudio64_vc.lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/ignore:4199 %(AdditionalOptions)</AdditionalOptions>
       <AllowIsolation>true</AllowIsolation>
       <DataExecutionPrevention>true</DataExecutionPrevention>
@@ -83,7 +83,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetExt>.node</TargetExt>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Vulkan\projects\QbEngine\x64\Debug\QbEngine;F:\Vulkan\freetype-2.9.1\build\Debug;F:\Fmod\FMOD_Studio_API_Windows\api\studio\lib;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>C:\Users\kivlin\.node-gyp\10.11.0\include\node;C:\Users\kivlin\.node-gyp\10.11.0\src;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\config;C:\Users\kivlin\.node-gyp\10.11.0\deps\openssl\openssl\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\uv\include;C:\Users\kivlin\.node-gyp\10.11.0\deps\zlib;C:\Users\kivlin\.node-gyp\10.11.0\deps\v8\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
