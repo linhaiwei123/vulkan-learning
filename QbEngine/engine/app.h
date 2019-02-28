@@ -29,6 +29,7 @@
 #include "physics.h"
 #include "font.h"
 #include "audio.h"
+#include "input.h"
 
 namespace qb {
 	class App {
@@ -47,6 +48,7 @@ namespace qb {
 		Physics physics;
 		FontMgr fontMgr;
 		AudioMgr audioMgr;
+		InputMgr inputMgr;
 	public:
 		App() {};
 		void run();

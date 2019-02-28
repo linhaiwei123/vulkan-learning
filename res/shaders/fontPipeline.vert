@@ -25,12 +25,12 @@ void main() {
 	float xpos = inPosition.x + chUniBuf.bearing.x;
 	// advance
 	xpos += advUniBuf.advance.x;
-	float ypos = inPosition.y + (chUniBuf.size.y - chUniBuf.bearing.y);
+	float ypos = inPosition.y - (chUniBuf.size.y - chUniBuf.bearing.y);
 	float w = chUniBuf.size.x;
 	float h = chUniBuf.size.y;
 	switch(index){
 		case 0:{
-			ypos -= h;
+			ypos += h;
 			break;
 		}
 		case 1:{
@@ -41,7 +41,7 @@ void main() {
 			break;
 		}
 		case 3:{
-			ypos -= h;
+			ypos += h;
 			xpos += w;
 			break;
 		}
