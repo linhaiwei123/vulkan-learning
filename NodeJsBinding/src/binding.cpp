@@ -1,22 +1,26 @@
-#include <node.h>
+#include <node_api.h>
 #include <Triangle.hpp>
 
 namespace nodejsBinding {
 
-	void run(const v8::FunctionCallbackInfo<v8::Value>& args) {
+	napi_value run(napi_env env, napi_callback_info info) {
+
 		// main
 		Triangle app;
 		app.run();
 
-		v8::Isolate* isolate = args.GetIsolate();
-		v8::Local<v8::Number> num = v8::Number::New(isolate, 0);
-
-		args.GetReturnValue().Set(num);
+		napi_value result;
+		assert(napi_create_int32(env, 0, &result) == napi_ok);
+		return result;
 	}
 
-	void init(v8::Local<v8::Object> exports) {
-		NODE_SET_METHOD(exports, "run", run);
+	static napi_value init(napi_env env, napi_value result) {
+		// run 
+		napi_property_descriptor desc = { "run", 0, run, 0, 0, 0, napi_default, 0 };
+		assert(napi_define_properties(env, result, 1, &desc) == napi_ok);
+		
+		return result;
 	}
 
-	NODE_MODULE(NodeJsBinding, init)
+	NAPI_MODULE(NodeJsBinding, init)
 }
