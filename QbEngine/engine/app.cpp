@@ -84,7 +84,7 @@ void qb::App::draw() {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
 
-	this->sync.currentFrame = (this->sync.currentFrame + 1) % this->sync.MAX_FRAMES;
+	this->sync.currentFrame = (this->sync.currentFrame + 1) % this->sync.maxFrames;
 }
 
 void qb::App::onInit() {

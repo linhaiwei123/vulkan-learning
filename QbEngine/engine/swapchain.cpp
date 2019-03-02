@@ -17,14 +17,14 @@ VkSurfaceFormatKHR qb::Swapchain::_chooseSwapSurfaceFormat(const std::vector<VkS
 VkPresentModeKHR qb::Swapchain::_chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes) {
 	VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
-	for (const auto& availablePresentMode : availablePresentModes) {
+	/*for (const auto& availablePresentMode : availablePresentModes) {
 		if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
 			return availablePresentMode;
 		}
 		else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
 			bestMode = availablePresentMode;
 		}
-	}
+	}*/
 
 	return bestMode;
 }
@@ -43,11 +43,12 @@ VkExtent2D qb::Swapchain::_chooseSwapExtent(const VkSurfaceCapabilitiesKHR & cap
 }
 
 uint32_t qb::Swapchain::_getImageCount(const VkSurfaceCapabilitiesKHR & capabilities) {
-	uint32_t imageCount = capabilities.minImageCount + 1;
+	/*uint32_t imageCount = capabilities.minImageCount + 1;
 	if (capabilities.maxImageCount > 0 && imageCount < capabilities.maxImageCount) {
 		imageCount = capabilities.maxImageCount;
 	}
-	return imageCount;
+	return imageCount;*/
+	return capabilities.minImageCount;
 }
 
 void qb::Swapchain::init(App* app) {

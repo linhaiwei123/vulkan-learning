@@ -13,7 +13,7 @@ namespace qb {
 	class Sync {
 	public:
 		App *app;
-		const int MAX_FRAMES = 2;
+		int maxFrames = -1;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
