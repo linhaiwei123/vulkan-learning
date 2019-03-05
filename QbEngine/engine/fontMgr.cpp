@@ -1,4 +1,4 @@
-#include "font.h"
+#include "fontMgr.h"
 #include "app.h"
 FT_Face qb::FontMgr::getFace(std::string name){
 	// read face from cache

@@ -1,5 +1,5 @@
 #include "actorComponent.h"
-
+#include "actor.h"
 void qb::ecs::ActorComponent::init(qb::ecs::Actor* actor){
 	this->actor = actor;
 	this->active = true;

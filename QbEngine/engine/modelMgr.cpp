@@ -1,5 +1,5 @@
 #include "app.h"
-#include "model.h"
+#include "modelMgr.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE

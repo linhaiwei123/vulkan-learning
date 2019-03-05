@@ -2,7 +2,7 @@
 #include "actorComponent.h"
 namespace qb {
 	namespace ecs {
-		class PhysicsComponent : ActorComponent {
+		class PhysicsComponent : public ActorComponent {
 
 		};
 	}

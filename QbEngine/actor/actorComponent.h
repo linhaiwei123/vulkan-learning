@@ -1,10 +1,9 @@
 #pragma once
-#include "actor.h"
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 namespace qb {
+	namespace ecs{ class Actor; }
 	namespace ecs {
-		class qb::ecs::Actor;
 		class ActorComponent {
 		public:
 			qb::ecs::Actor* actor;

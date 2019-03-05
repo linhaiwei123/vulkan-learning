@@ -27,25 +27,35 @@ namespace qb {
 		Descriptor* getDescriptor(std::string name);
 
 		void destroy();
+
+		void update();
 	};
 
 	class Descriptor {
+	private:
+		std::vector<VkDescriptorSetLayoutBinding> layoutBindings{};
 	public:
 		App* app;
 		std::string name;
-		std::vector<std::pair<VkDescriptorSetLayoutBinding,std::any>> bindings{};
+		std::vector<std::pair<VkDescriptorSetLayoutBinding, void*>> bindings{};
 		VkDescriptorSetLayout layout;
 		std::vector<VkDescriptorSet> descriptorSets;
+		size_t _descriptorSetDirtyNum = 0;
+		VkDescriptorSetLayoutCreateInfo layoutInfo;
 	public:
 		static bool is_descriptor_type_uniform(VkDescriptorType type);
 		static bool is_descriptor_type_texel_buffer(VkDescriptorType type);
 		static bool is_descriptor_type_image(VkDescriptorType type);
 		Descriptor() = default;
 		void init(App* app, std::string name);
-		
-		void build(size_t count=1);
+
+		void build(size_t count = 1);
 
 		void buildPerSwapchainImg();
+
+		void setDescriptorSetDirty();
+
+		void update();
 
 		inline VkDescriptorSet& sets(size_t i = 0) { return descriptorSets[i]; };
 		void destroy();

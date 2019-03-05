@@ -15,17 +15,18 @@ namespace qb {
 	class App;
 	class Buffer;
 	class Image;
+	class FrameBuffer;
 	class BufferMgr {
 	private:
 		std::unordered_map<std::string, qb::Buffer*> _bufferMap{};
 		std::unordered_map<std::string, qb::Image*> _imageMap{};
 		std::unordered_map <std::string, gli::texture*> _texMap{}; 
+		std::unordered_map<std::string, qb::FrameBuffer*> _framebufferMap{};
+		size_t _commandBufferDirtyNum = 0;
 	public:
 		App *app;
-		std::vector<VkFramebuffer> framebuffers;
 		std::vector<VkCommandBuffer> commandBuffers;
 		VkRenderPassCreateInfo renderPassCreateInfo{};
-		VkRenderPass renderPass = VK_NULL_HANDLE;
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::function<std::vector<VkImageView>(size_t i)> onAttachments = nullptr;
 	public:
@@ -33,11 +34,13 @@ namespace qb {
 
 		void init(App *app);
 
-		void build();
+		void update();
 
 		void begin(size_t i);
 
 		void end(size_t i);
+
+		void setCommandBufferDirty();
 
 		VkCommandBuffer beginOnce();
 
@@ -47,6 +50,8 @@ namespace qb {
 
 		Buffer* getBuffer(std::string name);
 		void destroyBuffer(std::string name);
+
+		FrameBuffer* getFrameBuffer(std::string name);
 
 		Image* getImage(std::string name);
 
@@ -117,5 +122,19 @@ namespace qb {
 		void setImageLayout(VkImageLayout layout, VkPipelineStageFlagBits srcStage, VkPipelineStageFlagBits dstStage, VkCommandBuffer cmdBuf=VK_NULL_HANDLE);
 
 		VkImageLayout getImageLayout();
+	};
+
+	class FrameBuffer {
+	private:
+		App* app;
+		std::string name;
+	public:
+		std::vector<VkFramebuffer> framebuffers;
+		VkRenderPass renderPass = VK_NULL_HANDLE;
+		std::function<std::vector<VkImageView>(size_t i)> onAttachments = nullptr;
+	public:
+		void init(App* app, std::string name);
+		void build();
+		void destroy();
 	};
 };

@@ -11,7 +11,7 @@ void qb::BufferMgr::init(App * app) {
 		VkCommandPoolCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		createInfo.queueFamilyIndex = queueFamilyIndices.graphics.value();
-		createInfo.flags = 0;
+		createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		vk_check(vkCreateCommandPool(app->device.logical, &createInfo, nullptr, &commandPool));
 	}
 	// command buffer
@@ -23,32 +23,17 @@ void qb::BufferMgr::init(App * app) {
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 		vk_check(vkAllocateCommandBuffers(app->device.logical, &allocInfo, commandBuffers.data()));
+		this->_commandBufferDirtyNum = app->swapchain.views.size();
 	}
 }
 
-void qb::BufferMgr::build() {
-	assert(renderPass != VK_NULL_HANDLE);
-
-	framebuffers.resize(app->swapchain.views.size());
-	// frame buffer create
-	for (size_t i = 0; i < framebuffers.size(); i++) {
-		assert(onAttachments != nullptr);
-		std::vector<VkImageView> attachments = onAttachments(i);
-		assert(attachments.size() != 0);
-		VkFramebufferCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		createInfo.renderPass = renderPass;
-		createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-		createInfo.pAttachments = attachments.data();
-		createInfo.width = app->swapchain.extent.width;
-		createInfo.height = app->swapchain.extent.height;
-		createInfo.layers = 1;
-
-		vk_check(vkCreateFramebuffer(app->device.logical, &createInfo, nullptr, &framebuffers[i]));
-	}
+void qb::BufferMgr::update() {
 	// command buffer record
-	for (size_t i = 0; i < commandBuffers.size(); i++) {
-		app->onCmd(i);
+	if(this->_commandBufferDirtyNum > 0) {
+		this->_commandBufferDirtyNum--;
+		uint32_t currImg = app->sync.currentImage;
+		vkResetCommandBuffer(commandBuffers[currImg], VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+		app->onCmd(currImg);
 	}
 }
 
@@ -65,27 +50,36 @@ void qb::BufferMgr::end(size_t i) {
 	vk_check(vkEndCommandBuffer(this->commandBuffers[i]));
 }
 
+void qb::BufferMgr::setCommandBufferDirty(){
+	this->_commandBufferDirtyNum = this->commandBuffers.size();
+}
+
 void qb::BufferMgr::destroy() {
-	for (auto framebuffer : framebuffers) {
-		vkDestroyFramebuffer(app->device.logical, framebuffer, nullptr);
+
+	// frame buffer destroy
+	for (auto& it : _framebufferMap) {
+		it.second->destroy();
+		delete it.second;
 	}
 	vkDestroyCommandPool(app->device.logical, commandPool, nullptr);
 
-	//buffer destroy
+	// buffer destroy
 	for (auto it = _bufferMap.begin(); it != _bufferMap.end(); it++) {
 		it->second->destroy();
 		delete it->second;
 	}
 
-	//texture destroy
+	// texture destroy
 	for (auto&it : _texMap)
 		delete it.second;
 
-	//image destroy
+	// image destroy
 	for (auto&it : _imageMap) {
 		it.second->destroy();
 		delete it.second;
 	}
+
+	
 		
 }
 
@@ -108,6 +102,17 @@ void qb::BufferMgr::destroyBuffer(std::string name){
 		delete it->second;
 		_bufferMap.erase(it);
 	}
+}
+
+qb::FrameBuffer * qb::BufferMgr::getFrameBuffer(std::string name){
+	// read buffer from cache
+	auto it = _framebufferMap.find(name);
+	if (it != _framebufferMap.end())
+		return it->second;
+	FrameBuffer* buffer = new FrameBuffer();
+	buffer->init(app, name);
+	_framebufferMap.insert({ name, buffer });
+	return _framebufferMap.at(name);
 }
 
 qb::Image * qb::BufferMgr::getImage(std::string name) {
@@ -506,4 +511,38 @@ void qb::Image::setImageLayout(VkImageLayout layout, VkPipelineStageFlagBits src
 
 VkImageLayout qb::Image::getImageLayout(){
 	return _imgLayout;
+}
+
+void qb::FrameBuffer::init(App * app, std::string name){
+	this->app = app;
+	this->name = name;
+}
+
+void qb::FrameBuffer::build(){
+	assert(this->renderPass != nullptr);
+	assert(this->onAttachments != nullptr);
+	framebuffers.resize(app->swapchain.views.size());
+	// frame buffer create
+	for (size_t i = 0; i < framebuffers.size(); i++) {
+		assert(onAttachments != nullptr);
+		std::vector<VkImageView> attachments = onAttachments(i);
+		assert(attachments.size() != 0);
+		VkFramebufferCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		createInfo.renderPass = renderPass;
+		createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+		createInfo.pAttachments = attachments.data();
+		createInfo.width = app->swapchain.extent.width;
+		createInfo.height = app->swapchain.extent.height;
+		createInfo.layers = 1;
+
+		vk_check(vkCreateFramebuffer(app->device.logical, &createInfo, nullptr, &framebuffers[i]));
+	}
+}
+
+void qb::FrameBuffer::destroy(){
+	for (auto framebuffer : framebuffers) {
+		vkDestroyFramebuffer(app->device.logical, framebuffer, nullptr);
+	}
+	this->renderPass = nullptr;
 }

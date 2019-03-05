@@ -21,7 +21,9 @@ void qb::App::init() {
 	log_info("physics initialize"); this->physics.init(this);
 	log_info("font initialize") this->fontMgr.init(this);
 	log_info("audio initialize") this->audioMgr.init(this);
+	log_info("event initialize") this->eventMgr.init(this);
 	log_info("input initialize"); this->inputMgr.init(this);
+	log_info("actor initialize") this->actorMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
@@ -45,6 +47,8 @@ void qb::App::draw() {
 	}
 
 	this->onLoop();
+	this->descriptorMgr.update();
+	this->bufferMgr.update();
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -106,7 +110,9 @@ void qb::App::onDestroy() {
 
 void qb::App::destroy() {
 	log_info("sub class destroy"); this->onDestroy();
+	log_info("actor destroy") this->actorMgr.destroy();
 	log_info("input destroy") this->inputMgr.destroy();
+	log_info("event destroy") this->eventMgr.destroy();
 	log_info("audio destroy") this->audioMgr.destroy();
 	log_info("font destroy") this->fontMgr.destroy();
 	log_info("physics destroy") this->physics.destroy();

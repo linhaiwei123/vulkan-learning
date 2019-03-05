@@ -7,9 +7,12 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include "actorComponent.h"
 namespace qb {
+	class App;
+	class EventEmitter;
 	namespace ecs {
 		class Actor {
 		public:
+			App* app;
 			struct Transform {
 				glm::vec3 position;
 				glm::quat rotation;
@@ -22,25 +25,32 @@ namespace qb {
 			boost::uuids::uuid uuid;
 			bool active;
 		public:
+			// component system
 			template<typename T=ecs::ActorComponent>
-			T* addComponent();
+			inline T* addComponent();
 			
 			template<typename T=ecs::ActorComponent>
-			T* removeComponent();
+			inline T* removeComponent();
 
 			template<typename T=ecs::ActorComponent>
-			T* getComponent();
+			inline T* getComponent();
 
 			template<typename T=ecs::ActorComponent>
-			std::vector<T*> removeComponents();
+			inline std::vector<T*> removeComponents();
 
 			template<typename T=ecs::ActorComponent>
-			std::vector<T*> getComponents();
+			inline std::vector<T*> getComponents();
 
-			void init();
+			// node life cycle
+			void init(App* app);
 			void update(float dt);
 			void destroy();
+
+			// event emitter
+			qb::EventEmitter* eventEmitter = nullptr;
 		};
 
 	}
 }
+
+#include "actor.ipp"

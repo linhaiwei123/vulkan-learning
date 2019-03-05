@@ -1,4 +1,4 @@
-#include "physics.h"
+#include "physicsMgr.h"
 #include "app.h"
 
 void qb::Physics::init(App * app) {

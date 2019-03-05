@@ -112,14 +112,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\freetype-2.9.1\include;F:\Fmod\FMOD_Studio_API_Windows\api\studio\inc;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>F:\Vulkan\1.1.92.1\Include;F:\Vulkan\glm;F:\Vulkan\glfw-3.2.1.bin.WIN64\include;F:\Vulkan\gli;F:\Vulkan\tinygltf;F:\Vulkan\PhysX\physx\include;F:\Vulkan\PhysX\physx\..\pxshared\include;F:\Vulkan\PhysX\physx\source\foundation\include;F:\Vulkan\freetype-2.9.1\include;F:\Fmod\FMOD_Studio_API_Windows\api\studio\inc;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\inc;F:\Vulkan\boost\boost;F:\Vulkan\projects\QbEngine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Python2.7\libs;F:\Vulkan\freetype-2.9.1\build\Debug;F:\Fmod\FMOD_Studio_API_Windows\api\studio\lib;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>F:\Vulkan\1.1.92.1\Lib;F:\Vulkan\glfw-3.2.1.bin.WIN64\lib-vc2015;F:\Vulkan\PhysX\physx\bin\win.x86_64.vc141.mt\debug;F:\Python2.7\libs;F:\Vulkan\freetype-2.9.1\build\Debug;F:\Fmod\FMOD_Studio_API_Windows\api\studio\lib;F:\Fmod\FMOD_Studio_API_Windows\api\lowlevel\lib;F:\Vulkan\boost\boost\stage\x64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;freetyped.lib;fmodstudio64_vc.lib;fmod64_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
     </Link>
@@ -174,15 +174,24 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="actor\actor.cpp" />
+    <ClCompile Include="actor\actorComponent.cpp" />
+    <ClCompile Include="actor\audioComponent.cpp" />
+    <ClCompile Include="actor\CameraComponent.cpp" />
+    <ClCompile Include="actor\meshComponent.cpp" />
+    <ClCompile Include="actor\physicsComponent.cpp" />
+    <ClCompile Include="actor\renderComponent.cpp" />
+    <ClCompile Include="engine\ActorMgr.cpp" />
     <ClCompile Include="engine\app.cpp" />
-    <ClCompile Include="engine\audio.cpp" />
+    <ClCompile Include="engine\audioMgr.cpp" />
     <ClCompile Include="engine\buffer.cpp" />
     <ClCompile Include="engine\device.cpp" />
-    <ClCompile Include="engine\font.cpp" />
-    <ClCompile Include="engine\input.cpp" />
+    <ClCompile Include="engine\eventMgr.cpp" />
+    <ClCompile Include="engine\fontMgr.cpp" />
+    <ClCompile Include="engine\inputMgr.cpp" />
     <ClCompile Include="engine\inst.cpp" />
-    <ClCompile Include="engine\model.cpp" />
-    <ClCompile Include="engine\physics.cpp" />
+    <ClCompile Include="engine\modelMgr.cpp" />
+    <ClCompile Include="engine\physicsMgr.cpp" />
     <ClCompile Include="engine\pipeline.cpp" />
     <ClCompile Include="engine\renderpass.cpp" />
     <ClCompile Include="engine\surface.cpp" />
@@ -193,15 +202,24 @@
     <ClCompile Include="engine\win.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="actor\actor.h" />
+    <ClInclude Include="actor\actorComponent.h" />
+    <ClInclude Include="actor\audioComponent.h" />
+    <ClInclude Include="actor\CameraComponent.h" />
+    <ClInclude Include="actor\meshComponent.h" />
+    <ClInclude Include="actor\physicsComponent.h" />
+    <ClInclude Include="actor\renderComponent.h" />
+    <ClInclude Include="engine\ActorMgr.h" />
     <ClInclude Include="engine\app.h" />
-    <ClInclude Include="engine\audio.h" />
+    <ClInclude Include="engine\audioMgr.h" />
     <ClInclude Include="engine\buffer.h" />
     <ClInclude Include="engine\device.h" />
-    <ClInclude Include="engine\font.h" />
-    <ClInclude Include="engine\input.h" />
+    <ClInclude Include="engine\eventMgr.h" />
+    <ClInclude Include="engine\fontMgr.h" />
+    <ClInclude Include="engine\inputMgr.h" />
     <ClInclude Include="engine\inst.h" />
-    <ClInclude Include="engine\model.h" />
-    <ClInclude Include="engine\physics.h" />
+    <ClInclude Include="engine\modelMgr.h" />
+    <ClInclude Include="engine\physicsMgr.h" />
     <ClInclude Include="engine\pipeline.h" />
     <ClInclude Include="engine\renderpass.h" />
     <ClInclude Include="engine\surface.h" />
@@ -210,6 +228,11 @@
     <ClInclude Include="engine\tool.h" />
     <ClInclude Include="engine\descriptor.h" />
     <ClInclude Include="engine\win.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="actor\actor.ipp">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

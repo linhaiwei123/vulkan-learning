@@ -12,6 +12,7 @@
 namespace qb {
 	class App;
 	class RenderPass;
+	class FrameBuffer;
 	class RenderPassMgr {
 	private:
 		std::unordered_map<std::string, RenderPass*> _renderPassMap{};
@@ -36,6 +37,7 @@ namespace qb {
 		std::vector<VkSubpassDescription> subpassDescs{};
 		std::vector<VkClearValue> clearValues{};
 		std::vector<VkSubpassDependency> dependencies{};
+		std::vector<VkFramebuffer>* framebuffers = nullptr;
 	public:
 		RenderPass() = default;
 		

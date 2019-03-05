@@ -2,7 +2,7 @@
 #include "actorComponent.h"
 namespace qb {
 	namespace ecs {
-		class AudioComponent : public ActorComponent {
+		class CameraComponent : public ActorComponent {
 
 		};
 	}

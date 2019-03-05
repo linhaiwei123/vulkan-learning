@@ -42,6 +42,12 @@ void qb::DescriptorMgr::destroy() {
 	vkDestroyDescriptorPool(app->device.logical, descriptorPool, nullptr);
 }
 
+void qb::DescriptorMgr::update(){
+	for (auto& it : _descriptorMap) {
+		it.second->update();
+	}
+}
+
 bool qb::Descriptor::is_descriptor_type_image(VkDescriptorType type){
 	if (type == VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER ||
 		type == VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER ||
@@ -74,15 +80,16 @@ bool qb::Descriptor::is_descriptor_type_uniform(VkDescriptorType type){
 void qb::Descriptor::init(App * app, std::string name){
 	this->app = app;
 	this->name = name;
+	this->_descriptorSetDirtyNum = 0;
 }
 
 void qb::Descriptor::build(size_t count){
 	assert(count >= 1);
 	assert(bindings.size() != 0);
 	// descriptor set layout
-	VkDescriptorSetLayoutCreateInfo layoutInfo = {};
+	layoutInfo = {};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	std::vector<VkDescriptorSetLayoutBinding> layoutBindings(bindings.size());
+	layoutBindings.resize(bindings.size());
 	transform(bindings.begin(), bindings.end(), layoutBindings.begin(), [](auto&v) -> VkDescriptorSetLayoutBinding& {return v.first; });
 	layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings.size());
 	layoutInfo.pBindings = layoutBindings.data();
@@ -98,8 +105,8 @@ void qb::Descriptor::build(size_t count){
 	vk_check(vkAllocateDescriptorSets(app->device.logical, &allocInfo, descriptorSets.data()));
 
 	// descriptor buffer/image info
-	std::vector<std::any> buffers(bindings.size());
-	transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) -> std::any {return v.second; });
+	std::vector<void*> buffers(bindings.size());
+	transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) {return v.second; });
 	size_t bufferCount = buffers.size();
 	for (size_t i = 0; i < count; i++) {
 		std::vector<VkWriteDescriptorSet> writeSets(bufferCount);
@@ -112,9 +119,9 @@ void qb::Descriptor::build(size_t count){
 			descriptorWrite.descriptorCount = 1;
 			descriptorWrite.descriptorType = layoutBindings[j].descriptorType;
 			if(is_descriptor_type_uniform(descriptorWrite.descriptorType))
-				descriptorWrite.pBufferInfo = &std::any_cast<Buffer*>(buffers[j])->descriptorBufferInfos[i];
+				descriptorWrite.pBufferInfo = &reinterpret_cast<Buffer*>(buffers[j])->descriptorBufferInfos[i];
 			else if(is_descriptor_type_image(descriptorWrite.descriptorType))
-				descriptorWrite.pImageInfo = &std::any_cast<Image*>(buffers[j])->descriptorImageInfo;
+				descriptorWrite.pImageInfo = &reinterpret_cast<Image*>(buffers[j])->descriptorImageInfo;
 			else if(is_descriptor_type_texel_buffer(descriptorWrite.descriptorType))
 				descriptorWrite.pTexelBufferView = nullptr; // TODO
 			else assert(0);
@@ -125,6 +132,42 @@ void qb::Descriptor::build(size_t count){
 
 void qb::Descriptor::buildPerSwapchainImg(){
 	this->build(app->swapchain.views.size());
+}
+
+void qb::Descriptor::setDescriptorSetDirty(){
+	this->_descriptorSetDirtyNum = app->swapchain.views.size();
+	app->bufferMgr.setCommandBufferDirty();
+}
+
+void qb::Descriptor::update(){
+	if (this->_descriptorSetDirtyNum > 0) {
+		this->_descriptorSetDirtyNum--;
+
+		size_t currImg = this->app->sync.currentImage;
+
+		std::vector<void*> buffers(bindings.size());
+		transform(bindings.begin(), bindings.end(), buffers.begin(), [&](auto&v) {return v.second; });
+		size_t bufferCount = buffers.size();
+
+		std::vector<VkWriteDescriptorSet> writeSets(bufferCount);
+		for (size_t j = 0; j < bufferCount; j++) {
+			VkWriteDescriptorSet& descriptorWrite = writeSets[j];
+			descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptorWrite.dstSet = descriptorSets[currImg];
+			descriptorWrite.dstBinding = layoutBindings[j].binding;
+			descriptorWrite.dstArrayElement = 0;
+			descriptorWrite.descriptorCount = 1;
+			descriptorWrite.descriptorType = layoutBindings[j].descriptorType;
+			if (is_descriptor_type_uniform(descriptorWrite.descriptorType))
+				descriptorWrite.pBufferInfo = &reinterpret_cast<Buffer*>(buffers[j])->descriptorBufferInfos[currImg];
+			else if (is_descriptor_type_image(descriptorWrite.descriptorType))
+				descriptorWrite.pImageInfo = &reinterpret_cast<Image*>(buffers[j])->descriptorImageInfo;
+			else if (is_descriptor_type_texel_buffer(descriptorWrite.descriptorType))
+				descriptorWrite.pTexelBufferView = nullptr; // TODO
+			else assert(0);
+		}
+		vkUpdateDescriptorSets(app->device.logical, static_cast<uint32_t>(writeSets.size()), writeSets.data(), 0, nullptr);
+	}
 }
 
 void qb::Descriptor::destroy(){

@@ -25,11 +25,13 @@
 #include "sync.h"
 #include "tool.h"
 #include "descriptor.h"
-#include "model.h"
-#include "physics.h"
-#include "font.h"
-#include "audio.h"
-#include "input.h"
+#include "modelMgr.h"
+#include "physicsMgr.h"
+#include "fontMgr.h"
+#include "audioMgr.h"
+#include "eventMgr.h"
+#include "inputMgr.h"
+#include "actorMgr.h"
 
 namespace qb {
 	class App {
@@ -48,7 +50,9 @@ namespace qb {
 		Physics physics;
 		FontMgr fontMgr;
 		AudioMgr audioMgr;
+		EventMgr eventMgr;
 		InputMgr inputMgr;
+		ActorMgr actorMgr;
 	public:
 		App() {};
 		void run();

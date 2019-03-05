@@ -16,6 +16,9 @@
     <Filter Include="Source Files\engine">
       <UniqueIdentifier>{fd99661e-45aa-44ea-bc91-23e4bd014990}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\actor">
+      <UniqueIdentifier>{dca1ac3b-c307-4387-8bd9-bcce0899243a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\app.cpp">
@@ -54,20 +57,47 @@
     <ClCompile Include="engine\descriptor.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\model.cpp">
+    <ClCompile Include="actor\actor.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\actorComponent.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\renderComponent.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\meshComponent.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\physicsComponent.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\audioComponent.cpp">
+      <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\ActorMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\physics.cpp">
+    <ClCompile Include="engine\inputMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\font.cpp">
+    <ClCompile Include="engine\modelMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\audio.cpp">
+    <ClCompile Include="engine\physicsMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\input.cpp">
+    <ClCompile Include="engine\audioMgr.cpp">
       <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\eventMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\fontMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="actor\CameraComponent.cpp">
+      <Filter>Source Files\actor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -107,20 +137,52 @@
     <ClInclude Include="engine\descriptor.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\model.h">
+    <ClInclude Include="actor\actor.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\actorComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\renderComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\meshComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\physicsComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\audioComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\ActorMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\physics.h">
+    <ClInclude Include="engine\inputMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\font.h">
+    <ClInclude Include="engine\modelMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\audio.h">
+    <ClInclude Include="engine\physicsMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="engine\input.h">
+    <ClInclude Include="engine\audioMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
+    <ClInclude Include="engine\eventMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\fontMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="actor\CameraComponent.h">
+      <Filter>Source Files\actor</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="actor\actor.ipp">
+      <Filter>Source Files\actor</Filter>
+    </None>
   </ItemGroup>
 </Project>

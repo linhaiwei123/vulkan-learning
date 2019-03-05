@@ -68,7 +68,8 @@ void qb::RenderPass::begin(size_t i){
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassBeginInfo.renderPass = renderPass;
-	renderPassBeginInfo.framebuffer = app->bufferMgr.framebuffers[i];
+	assert(framebuffers != nullptr);
+	renderPassBeginInfo.framebuffer = (*framebuffers)[i];
 	renderPassBeginInfo.renderArea.offset = { 0, 0 };
 	renderPassBeginInfo.renderArea.extent = app->swapchain.extent;
 

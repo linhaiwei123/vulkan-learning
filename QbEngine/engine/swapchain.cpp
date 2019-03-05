@@ -48,7 +48,7 @@ uint32_t qb::Swapchain::_getImageCount(const VkSurfaceCapabilitiesKHR & capabili
 		imageCount = capabilities.maxImageCount;
 	}
 	return imageCount;*/
-	return capabilities.minImageCount;
+	return capabilities.minImageCount + 1;
 }
 
 void qb::Swapchain::init(App* app) {
