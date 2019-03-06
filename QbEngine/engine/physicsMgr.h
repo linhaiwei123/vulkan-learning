@@ -11,7 +11,7 @@
 
 namespace qb {
 	class App;
-	class Physics {
+	class PhysicsMgr {
 	public: //physx
 		physx::PxDefaultAllocator pxAllocator;
 		physx::PxDefaultErrorCallback pxErrorCallback;
@@ -23,11 +23,11 @@ namespace qb {
 	public:
 		App *app;
 	public:
-		Physics() = default;
+		PhysicsMgr() = default;
 
 		void init(App *app);
 
-		void step(float dt);
+		void update(float dt);
 
 		void destroy();
 	};

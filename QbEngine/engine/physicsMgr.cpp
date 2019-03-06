@@ -1,7 +1,7 @@
 #include "physicsMgr.h"
 #include "app.h"
 
-void qb::Physics::init(App * app) {
+void qb::PhysicsMgr::init(App * app) {
 	this->app = app;
 	// physics
 	pxFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, pxAllocator, pxErrorCallback);
@@ -15,12 +15,14 @@ void qb::Physics::init(App * app) {
 	pxMaterial = pxPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 }
 
-void qb::Physics::step(float dt){
-	pxScene->simulate(dt);
-	pxScene->fetchResults(true);
+void qb::PhysicsMgr::update(float dt){
+	if (dt > 0) {
+		pxScene->simulate(dt);
+		pxScene->fetchResults(true);
+	}
 }
 
-void qb::Physics::destroy(){
+void qb::PhysicsMgr::destroy(){
 	pxScene->release();
 	pxDispatcher->release();
 	pxPhysics->release();

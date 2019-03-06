@@ -7,7 +7,7 @@
 // log font color black = 30,red = 31,green = 32,yellow = 33,blue = 34,purple = 35,dark_green = 36,white = 37
 #define log_info(format, ...) {fprintf(stdout,"\033[40;32m" format "\033[40;37m" "\n", ##__VA_ARGS__);}
 #define log_error(format, ...) {fprintf(stdout,"\033[40;31m" format "\033[40;37m" "\n", ##__VA_ARGS__);}
-#define log_warning(format, ...) {fprintf(stdout,"\033[40;33m" format "\033[40;37m" "\n", ##__VA_ARGS__);}
+#define log_warn(format, ...) {fprintf(stdout,"\033[40;33m" format "\033[40;37m" "\n", ##__VA_ARGS__);}
 
 //! vk_check
 #define vk_check(v)	do {\
@@ -47,5 +47,22 @@ static std::vector<VkVertexInputAttributeDescription> getAttribDesc() {\
 #define asset_base_path "F:/Vulkan/projects/res/"
 #define get_asset_full_path(name) asset_base_path + name
 
-//! align
-#define align_to_mul(size, align)  ((size + align - 1) & ~(align - 1))
+//! dynamic table
+static std::unordered_map <std::string, size_t> size_table{
+	{"int",sizeof(int)},
+	{"uint",sizeof(unsigned int)},
+	{"float",sizeof(float)},
+	{"double", sizeof(double)},
+	{"glm::vec2", sizeof(glm::vec2)},
+	{"glm::vec3", sizeof(glm::vec3)},
+	{"glm::vec4", sizeof(glm::vec4)},
+	{"glm::ivec2", sizeof(glm::ivec2)},
+	{"glm::ivec3", sizeof(glm::ivec3)},
+	{"glm::ivec4", sizeof(glm::ivec4)},
+	{"glm::uvec2", sizeof(glm::uvec2)},
+	{"glm::uvec3", sizeof(glm::uvec3)},
+	{"glm::uvec4", sizeof(glm::uvec4)},
+	{"glm::mat2", sizeof(glm::mat2)},
+	{"glm::mat3", sizeof(glm::mat3)},
+	{"glm::mat4", sizeof(glm::mat4)},
+};

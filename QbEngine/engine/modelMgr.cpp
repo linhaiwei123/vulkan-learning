@@ -18,7 +18,7 @@ tinygltf::Model * qb::ModelMgr::getGltf(const std::string name){
 	auto path = get_asset_full_path(name);
 	bool ret = _loader.LoadASCIIFromFile(model, &err, &warn, path);
 	if (!warn.empty()) {
-		log_warning("%s", warn.c_str());
+		log_warn("%s", warn.c_str());
 	}
 	if (!err.empty()) {
 		log_error("%s", err.c_str());
@@ -325,7 +325,7 @@ void qb::Model::_loadAnimations(){
 				newChannel.path = AnimationChannel::SCALE;
 			}
 			if (channel.target_path == "weights") {
-				log_warning("weights not yet supported, skipping channel");
+				log_warn("weights not yet supported, skipping channel");
 				continue;
 			}
 			newChannel.samplerIndex = channel.sampler;

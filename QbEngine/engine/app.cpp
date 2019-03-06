@@ -18,24 +18,31 @@ void qb::App::init() {
 	log_info("descriptor mgr initialize"); this->descriptorMgr.init(this);
 	log_info("model initialize"); this->modelMgr.init(this);
 	log_info("sync initialize"); this->sync.init(this);
-	log_info("physics initialize"); this->physics.init(this);
+	log_info("physics initialize"); this->physicsMgr.init(this);
 	log_info("font initialize") this->fontMgr.init(this);
 	log_info("audio initialize") this->audioMgr.init(this);
 	log_info("event initialize") this->eventMgr.init(this);
 	log_info("input initialize"); this->inputMgr.init(this);
 	log_info("actor initialize") this->actorMgr.init(this);
+	log_info("scene initialize") this->sceneMgr.init(this);
+	log_info("timer initialize") this->timerMgr.init(this);
+	log_info("dynamic struct initialize") this->dynamicStructMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
 void qb::App::loop() {
 	this->win.mainLoop([this](){
-		this->physics.step(1.0f / 60.0f); // physics update
-		this->audioMgr.update(); // audio update
-		this->draw(); // logic + render update
+		this->beginFrame();
+		this->updateTimer();
+		this->updateLogic();
+		this->updatePhysics();
+		this->updateAudio();
+		this->updateRender();
+		this->endFrame();
 	});
 }
 
-void qb::App::draw() {
+void qb::App::beginFrame(){
 	vkWaitForFences(this->device.logical, 1, &this->sync.inFlightFences[this->sync.currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
 	VkResult result = vkAcquireNextImageKHR(this->device.logical, this->swapchain.swapchain, std::numeric_limits<uint64_t>::max(), this->sync.imageAvailableSemaphores[this->sync.currentFrame], VK_NULL_HANDLE, &this->sync.currentImage);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -45,11 +52,9 @@ void qb::App::draw() {
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
+}
 
-	this->onLoop();
-	this->descriptorMgr.update();
-	this->bufferMgr.update();
-
+void qb::App::endFrame(){
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	VkSemaphore waitSemaphores[] = { this->sync.imageAvailableSemaphores[this->sync.currentFrame] };
@@ -78,7 +83,7 @@ void qb::App::draw() {
 	presentInfo.pImageIndices = &this->sync.currentImage;
 	presentInfo.pResults = nullptr;
 
-	result = vkQueuePresentKHR(this->device.queues.present, &presentInfo);
+	VkResult result = vkQueuePresentKHR(this->device.queues.present, &presentInfo);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || this->win.resized) {
 		this->win.resized = false;
@@ -89,6 +94,28 @@ void qb::App::draw() {
 	}
 
 	this->sync.currentFrame = (this->sync.currentFrame + 1) % this->sync.maxFrames;
+}
+
+void qb::App::updateTimer(){
+	this->timerMgr.update(); // timer update
+}
+
+void qb::App::updatePhysics(){
+	this->physicsMgr.update(this->timerMgr.getDeltaTime()); // physics update
+}
+
+void qb::App::updateAudio(){
+	this->audioMgr.update(); // audio update
+}
+
+void qb::App::updateLogic(){
+	this->sceneMgr.currentScene->update(this->timerMgr.getDeltaTime());
+	this->onLoop(); // logic update
+}
+
+void qb::App::updateRender(){
+	this->descriptorMgr.update(); // render update
+	this->bufferMgr.update();
 }
 
 void qb::App::onInit() {
@@ -109,13 +136,16 @@ void qb::App::onDestroy() {
 
 
 void qb::App::destroy() {
-	log_info("sub class destroy"); this->onDestroy();
+	log_info("sub class destroy") this->onDestroy();
+	log_info("dynamic struct destroy") this->dynamicStructMgr.destroy();
+	log_info("timer destroy") this->timerMgr.destroy();
+	log_info("scene destroy") this->sceneMgr.destroy();
 	log_info("actor destroy") this->actorMgr.destroy();
 	log_info("input destroy") this->inputMgr.destroy();
 	log_info("event destroy") this->eventMgr.destroy();
 	log_info("audio destroy") this->audioMgr.destroy();
 	log_info("font destroy") this->fontMgr.destroy();
-	log_info("physics destroy") this->physics.destroy();
+	log_info("physics destroy") this->physicsMgr.destroy();
 	log_info("sync destroy"); this->sync.destroy();
 	log_info("model destroy"); this->modelMgr.destroy();
 	log_info("descriptor mgr destroy"); this->descriptorMgr.destroy();

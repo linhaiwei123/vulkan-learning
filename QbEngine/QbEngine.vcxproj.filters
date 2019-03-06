@@ -75,9 +75,6 @@
     <ClCompile Include="actor\audioComponent.cpp">
       <Filter>Source Files\actor</Filter>
     </ClCompile>
-    <ClCompile Include="engine\ActorMgr.cpp">
-      <Filter>Source Files\engine</Filter>
-    </ClCompile>
     <ClCompile Include="engine\inputMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
@@ -96,8 +93,23 @@
     <ClCompile Include="engine\fontMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="actor\CameraComponent.cpp">
+    <ClCompile Include="actor\cameraComponent.cpp">
       <Filter>Source Files\actor</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\actorMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\sceneMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\timerMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\renderMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\dynamicStructMgr.cpp">
+      <Filter>Source Files\engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -155,9 +167,6 @@
     <ClInclude Include="actor\audioComponent.h">
       <Filter>Source Files\actor</Filter>
     </ClInclude>
-    <ClInclude Include="engine\ActorMgr.h">
-      <Filter>Source Files\engine</Filter>
-    </ClInclude>
     <ClInclude Include="engine\inputMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
@@ -176,8 +185,23 @@
     <ClInclude Include="engine\fontMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
-    <ClInclude Include="actor\CameraComponent.h">
+    <ClInclude Include="actor\cameraComponent.h">
       <Filter>Source Files\actor</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\actorMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\sceneMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\timerMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\renderMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\dynamicStructMgr.h">
+      <Filter>Source Files\engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

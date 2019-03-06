@@ -32,6 +32,9 @@
 #include "eventMgr.h"
 #include "inputMgr.h"
 #include "actorMgr.h"
+#include "sceneMgr.h"
+#include "timerMgr.h"
+#include "dynamicStructMgr.h"
 
 namespace qb {
 	class App {
@@ -47,18 +50,27 @@ namespace qb {
 		Sync sync;
 		DescriptorMgr descriptorMgr;
 		ModelMgr modelMgr;
-		Physics physics;
+		PhysicsMgr physicsMgr;
 		FontMgr fontMgr;
 		AudioMgr audioMgr;
 		EventMgr eventMgr;
 		InputMgr inputMgr;
 		ActorMgr actorMgr;
+		SceneMgr sceneMgr;
+		TimerMgr timerMgr;
+		DynamicStructMgr dynamicStructMgr;
 	public:
 		App() {};
 		void run();
 		void init();
 		void loop();
-		void draw();
+		void beginFrame();
+		void endFrame();
+		void updateTimer();
+		void updatePhysics();
+		void updateAudio();
+		void updateLogic();
+		void updateRender();
 		void destroy();
 		virtual void onInit();
 		virtual void onLoop();

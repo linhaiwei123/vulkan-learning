@@ -1,4 +1,4 @@
-#include "ActorMgr.h"
+#include "actorMgr.h"
 
 void qb::ActorMgr::init(App * app){
 	this->app = app;
