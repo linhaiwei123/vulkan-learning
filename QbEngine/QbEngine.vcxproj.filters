@@ -24,9 +24,6 @@
     <ClCompile Include="engine\app.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
-    <ClCompile Include="engine\buffer.cpp">
-      <Filter>Source Files\engine</Filter>
-    </ClCompile>
     <ClCompile Include="engine\device.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
@@ -52,9 +49,6 @@
       <Filter>Source Files\engine</Filter>
     </ClCompile>
     <ClCompile Include="engine\win.cpp">
-      <Filter>Source Files\engine</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\descriptor.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
     <ClCompile Include="actor\actor.cpp">
@@ -111,12 +105,15 @@
     <ClCompile Include="engine\dynamicStructMgr.cpp">
       <Filter>Source Files\engine</Filter>
     </ClCompile>
+    <ClCompile Include="engine\descriptorMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\bufferMgr.cpp">
+      <Filter>Source Files\engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\app.h">
-      <Filter>Source Files\engine</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\buffer.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\device.h">
@@ -144,9 +141,6 @@
       <Filter>Source Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\win.h">
-      <Filter>Source Files\engine</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\descriptor.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="actor\actor.h">
@@ -201,6 +195,12 @@
       <Filter>Source Files\engine</Filter>
     </ClInclude>
     <ClInclude Include="engine\dynamicStructMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\descriptorMgr.h">
+      <Filter>Source Files\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\bufferMgr.h">
       <Filter>Source Files\engine</Filter>
     </ClInclude>
   </ItemGroup>

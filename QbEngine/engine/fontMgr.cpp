@@ -63,6 +63,16 @@ void qb::FontMgr::init(App * app){
 	indexBuf->bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 	indexBuf->build();
 	indexBuf->mapping(indices.data());
+
+	// descriptor desc
+	descriptorDesc = app->descriptorMgr.getDescriptorDesc("$fontDescriptor");
+	descriptorDesc->bindings = {
+		descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+		descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+		descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+		descriptor_layout_binding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+	};
+	descriptorDesc->build();
 }
 
 void qb::FontMgr::destroy(){
@@ -203,11 +213,12 @@ void qb::Text::build(){
 		// descriptor
 		std::string descriptorName = "$descriptor_" + uniqueName + "/" + character->contentStr + "/" + std::to_string(chIndex);
 		qb::Descriptor* descriptor = app->descriptorMgr.getDescriptor(descriptorName);
-		descriptor->bindings = {
-			{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), mvpUniBuf},
-			{descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), character->uniBuf},
-			{descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf},
-			{descriptor_layout_binding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT), character->img},
+		descriptor->desc = app->fontMgr.descriptorDesc;
+		descriptor->datas = {
+			mvpUniBuf,
+			character->uniBuf,
+			uniBuf,
+			character->img,
 		};
 		descriptor->buildPerSwapchainImg();
 		this->descriptors.push_back(descriptor);

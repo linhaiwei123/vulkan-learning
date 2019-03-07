@@ -41,6 +41,12 @@ qb::Model * qb::ModelMgr::getModel(const std::string name) {
 }
 void qb::ModelMgr::init(App *app) {
 	this->app = app;
+	// init descriptor desc
+	this->descriptorDesc = app->descriptorMgr.getDescriptorDesc("$modelDescriptorDesc");
+	this->descriptorDesc->bindings = {
+		descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+	};
+	this->descriptorDesc->build();
 }
 
 
@@ -509,8 +515,9 @@ void qb::Model::build(){
 			// descriptor set
 			std::string descriptorName = "$descriptor_" + uniqueName;
 			Descriptor* descriptor = app->descriptorMgr.getDescriptor(descriptorName);
-			descriptor->bindings = {
-				{descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT), uniBuf}
+			descriptor->desc = app->modelMgr.descriptorDesc;
+			descriptor->datas = {
+				uniBuf
 			};
 			descriptor->buildPerSwapchainImg();
 			node->mesh->descriptor = descriptor;

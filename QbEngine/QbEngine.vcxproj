@@ -184,7 +184,7 @@
     <ClCompile Include="engine\actorMgr.cpp" />
     <ClCompile Include="engine\app.cpp" />
     <ClCompile Include="engine\audioMgr.cpp" />
-    <ClCompile Include="engine\buffer.cpp" />
+    <ClCompile Include="engine\bufferMgr.cpp" />
     <ClCompile Include="engine\device.cpp" />
     <ClCompile Include="engine\dynamicStructMgr.cpp" />
     <ClCompile Include="engine\eventMgr.cpp" />
@@ -202,7 +202,7 @@
     <ClCompile Include="engine\sync.cpp" />
     <ClCompile Include="engine\timerMgr.cpp" />
     <ClCompile Include="engine\tool.cpp" />
-    <ClCompile Include="engine\descriptor.cpp" />
+    <ClCompile Include="engine\descriptorMgr.cpp" />
     <ClCompile Include="engine\win.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -216,7 +216,7 @@
     <ClInclude Include="engine\actorMgr.h" />
     <ClInclude Include="engine\app.h" />
     <ClInclude Include="engine\audioMgr.h" />
-    <ClInclude Include="engine\buffer.h" />
+    <ClInclude Include="engine\bufferMgr.h" />
     <ClInclude Include="engine\device.h" />
     <ClInclude Include="engine\dynamicStructMgr.h" />
     <ClInclude Include="engine\eventMgr.h" />
@@ -234,7 +234,7 @@
     <ClInclude Include="engine\sync.h" />
     <ClInclude Include="engine\timerMgr.h" />
     <ClInclude Include="engine\tool.h" />
-    <ClInclude Include="engine\descriptor.h" />
+    <ClInclude Include="engine\descriptorMgr.h" />
     <ClInclude Include="engine\win.h" />
   </ItemGroup>
   <ItemGroup>

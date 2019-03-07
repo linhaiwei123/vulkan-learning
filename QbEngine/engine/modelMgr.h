@@ -21,6 +21,7 @@ namespace qb {
 	class App;
 	class Buffer;
 	class Descriptor;
+	class DescriptorDesc;
 	class Image;
 	class Model;
 	class ModelMgr {
@@ -30,6 +31,7 @@ namespace qb {
 		tinygltf::TinyGLTF _loader;
 	public:
 		App *app;
+		DescriptorDesc* descriptorDesc;
 	public:
 		ModelMgr() = default;
 		tinygltf::Model* getGltf(const std::string name);

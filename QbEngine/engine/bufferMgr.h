@@ -16,12 +16,15 @@ namespace qb {
 	class Buffer;
 	class Image;
 	class FrameBuffer;
+	class DynamicStruct;
+	class VertexDesc;
 	class BufferMgr {
 	private:
 		std::unordered_map<std::string, qb::Buffer*> _bufferMap{};
 		std::unordered_map<std::string, qb::Image*> _imageMap{};
 		std::unordered_map <std::string, gli::texture*> _texMap{}; 
 		std::unordered_map<std::string, qb::FrameBuffer*> _framebufferMap{};
+		std::unordered_map<std::string, qb::VertexDesc*> _vertexDescMap{};
 		size_t _commandBufferDirtyNum = 0;
 	public:
 		App *app;
@@ -58,6 +61,8 @@ namespace qb {
 		inline VkCommandBuffer cmdBuf(size_t i) { return commandBuffers[i]; };
 
 		gli::texture* getTex(std::string name);
+
+		qb::VertexDesc* getVertexDesc(std::string name);
 	};
 
 	class Buffer {
@@ -135,6 +140,23 @@ namespace qb {
 	public:
 		void init(App* app, std::string name);
 		void build();
+		void destroy();
+	};
+
+	class VertexDesc {
+	private:
+		App* app;
+		std::string name;
+		std::vector<VkVertexInputAttributeDescription> _attribDescs;
+	public: // args
+		qb::DynamicStruct* dynamicStruct;
+		std::vector<VkFormat> formats;
+		VkVertexInputRate inputRate;
+	public:
+		void init(App* app, std::string name);
+		void build();
+		VkVertexInputBindingDescription getBinding(size_t binding);
+		std::vector<VkVertexInputAttributeDescription> getAttrib(size_t binding);
 		void destroy();
 	};
 };

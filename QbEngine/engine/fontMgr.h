@@ -14,6 +14,7 @@ namespace qb {
 	class App;
 	class Image;
 	class Buffer;
+	class DescriptorDesc;
 	class Descriptor; 
 	class Text;
 	class Font;
@@ -36,6 +37,7 @@ namespace qb {
 		Buffer* indexBuf;
 		std::vector<uint16_t> indices{};
 		std::vector <qb::FontMgr::Vertex> vertices{};
+		DescriptorDesc* descriptorDesc;
 	public:
 		FontMgr() = default;
 

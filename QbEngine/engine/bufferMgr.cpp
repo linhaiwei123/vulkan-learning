@@ -1,4 +1,4 @@
-#include "buffer.h"
+#include "bufferMgr.h"
 #include "app.h"
 #include <vulkan/vulkan_core.h>
 
@@ -79,7 +79,11 @@ void qb::BufferMgr::destroy() {
 		delete it.second;
 	}
 
-	
+	// vertex desc destroy
+	for (auto& it : _vertexDescMap) {
+		it.second->destroy();
+		delete it.second;
+	}
 		
 }
 
@@ -136,6 +140,17 @@ gli::texture* qb::BufferMgr::getTex(std::string name){
 	assert(!tex->empty());
 	_texMap.insert({ name, tex });
 	return _texMap.at(name);
+}
+
+qb::VertexDesc * qb::BufferMgr::getVertexDesc(std::string name) {
+	// read vertex desc from cache
+	auto it = _vertexDescMap.find(name);
+	if (it != _vertexDescMap.end())
+		return it->second;
+	qb::VertexDesc* vertexDesc = new qb::VertexDesc();
+	vertexDesc->init(app, name);
+	_vertexDescMap.insert({ name, vertexDesc });
+	return _vertexDescMap.at(name);
 }
 
 void qb::Buffer::init(App * app, std::string name) {
@@ -545,4 +560,42 @@ void qb::FrameBuffer::destroy(){
 		vkDestroyFramebuffer(app->device.logical, framebuffer, nullptr);
 	}
 	this->renderPass = nullptr;
+}
+
+void qb::VertexDesc::init(App * app, std::string name) {
+	this->app = app;
+	this->name = name;
+	this->dynamicStruct = nullptr;
+	this->formats = {};
+	this->inputRate = VK_VERTEX_INPUT_RATE_MAX_ENUM;
+	this->_attribDescs = {};
+}
+
+void qb::VertexDesc::build() {
+	assert(this->dynamicStruct != nullptr);
+	assert(this->formats.size() != 0);
+	assert(this->inputRate != VK_VERTEX_INPUT_RATE_MAX_ENUM);
+
+	// attrib desc
+	auto keys = this->dynamicStruct->getKeys();
+	for (uint32_t location = 0; location < keys->size(); location++) {
+		auto& format = formats[location];
+		auto& key = (*keys)[location];
+		this->_attribDescs.push_back({ location, 0u, format, static_cast<uint32_t>(this->dynamicStruct->getOffset(key)) });
+	}
+}
+
+VkVertexInputBindingDescription qb::VertexDesc::getBinding(size_t binding) {
+	return {static_cast<uint32_t>(binding), static_cast<uint32_t>(this->dynamicStruct->size), inputRate};
+}
+
+std::vector<VkVertexInputAttributeDescription> qb::VertexDesc::getAttrib(size_t binding) {
+	for (auto& attribDesc : this->_attribDescs) {
+		attribDesc.binding = static_cast<uint32_t>(binding);
+	}
+	return this->_attribDescs;
+}
+
+void qb::VertexDesc::destroy() {
+
 }
