@@ -16,17 +16,18 @@ void qb::App::init() {
 	log_info("render pass mgr initialize"); this->renderPassMgr.init(this);
 	log_info("buffer mgr initialize"); this->bufferMgr.init(this);
 	log_info("descriptor mgr initialize"); this->descriptorMgr.init(this);
-	log_info("model initialize"); this->modelMgr.init(this);
+	log_info("model mgr initialize"); this->modelMgr.init(this);
 	log_info("sync initialize"); this->sync.init(this);
-	log_info("physics initialize"); this->physicsMgr.init(this);
-	log_info("font initialize") this->fontMgr.init(this);
-	log_info("audio initialize") this->audioMgr.init(this);
-	log_info("event initialize") this->eventMgr.init(this);
-	log_info("input initialize"); this->inputMgr.init(this);
-	log_info("actor initialize") this->actorMgr.init(this);
-	log_info("scene initialize") this->sceneMgr.init(this);
-	log_info("timer initialize") this->timerMgr.init(this);
-	log_info("dynamic struct initialize") this->dynamicStructMgr.init(this);
+	log_info("physics mgr initialize"); this->physicsMgr.init(this);
+	log_info("font mgr initialize") this->fontMgr.init(this);
+	log_info("audio mgr initialize") this->audioMgr.init(this);
+	log_info("event mgr initialize") this->eventMgr.init(this);
+	log_info("input mgr initialize"); this->inputMgr.init(this);
+	log_info("actor mgr initialize") this->actorMgr.init(this);
+	log_info("scene mgr initialize") this->sceneMgr.init(this);
+	log_info("timer mgr initialize") this->timerMgr.init(this);
+	log_info("dynamic struct mgr initialize") this->dynamicStructMgr.init(this);
+	log_info("file mgr initialize") this->fileMgr.init(this);
 	log_info("sub class initialize"); this->onInit();
 }
 
@@ -137,17 +138,18 @@ void qb::App::onDestroy() {
 
 void qb::App::destroy() {
 	log_info("sub class destroy") this->onDestroy();
-	log_info("dynamic struct destroy") this->dynamicStructMgr.destroy();
-	log_info("timer destroy") this->timerMgr.destroy();
-	log_info("scene destroy") this->sceneMgr.destroy();
-	log_info("actor destroy") this->actorMgr.destroy();
-	log_info("input destroy") this->inputMgr.destroy();
-	log_info("event destroy") this->eventMgr.destroy();
-	log_info("audio destroy") this->audioMgr.destroy();
-	log_info("font destroy") this->fontMgr.destroy();
-	log_info("physics destroy") this->physicsMgr.destroy();
+	log_info("file mgr destroy") this->fileMgr.destroy();
+	log_info("dynamic struct mgr destroy") this->dynamicStructMgr.destroy();
+	log_info("timer mgr destroy") this->timerMgr.destroy();
+	log_info("scene mgr destroy") this->sceneMgr.destroy();
+	log_info("actor mgr destroy") this->actorMgr.destroy();
+	log_info("input mgr destroy") this->inputMgr.destroy();
+	log_info("event mgr destroy") this->eventMgr.destroy();
+	log_info("audio mgr destroy") this->audioMgr.destroy();
+	log_info("font mgr destroy") this->fontMgr.destroy();
+	log_info("physics mgr destroy") this->physicsMgr.destroy();
 	log_info("sync destroy"); this->sync.destroy();
-	log_info("model destroy"); this->modelMgr.destroy();
+	log_info("model mgr destroy"); this->modelMgr.destroy();
 	log_info("descriptor mgr destroy"); this->descriptorMgr.destroy();
 	log_info("buffer mgr destroy"); this->bufferMgr.destroy();
 	log_info("pipeline mgr destroy"); this->pipelineMgr.destroy();

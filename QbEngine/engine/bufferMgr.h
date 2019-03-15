@@ -32,6 +32,7 @@ namespace qb {
 		VkRenderPassCreateInfo renderPassCreateInfo{};
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::function<std::vector<VkImageView>(size_t i)> onAttachments = nullptr;
+		qb::Image* defaultDepthImg;
 	public:
 		BufferMgr() = default;
 
@@ -47,7 +48,7 @@ namespace qb {
 
 		VkCommandBuffer beginOnce();
 
-		void endOnce(VkCommandBuffer cmdBuf);
+		void endOnce(VkCommandBuffer* cmdBuf);
 
 		void destroy();
 
@@ -137,6 +138,7 @@ namespace qb {
 		std::vector<VkFramebuffer> framebuffers;
 		VkRenderPass renderPass = VK_NULL_HANDLE;
 		std::function<std::vector<VkImageView>(size_t i)> onAttachments = nullptr;
+		VkFramebufferCreateInfo createInfo;
 	public:
 		void init(App* app, std::string name);
 		void build();

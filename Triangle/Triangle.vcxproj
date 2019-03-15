@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -22,11 +22,19 @@
     <ClCompile Include="src\entry.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Pbr.hpp" />
     <ClInclude Include="src\Triangle.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\shaders\compute.comp" />
+    <None Include="..\res\shaders\genBrdfLut.frag" />
+    <None Include="..\res\shaders\genBrdfLut.vert" />
+    <None Include="..\res\shaders\irradianceCube.frag" />
+    <None Include="..\res\shaders\prefilterEnvmap.frag" />
+    <None Include="..\res\shaders\filterCube.vert" />
     <None Include="..\res\shaders\fontPipeline.frag" />
+    <None Include="..\res\shaders\pbr.frag" />
+    <None Include="..\res\shaders\pbr.vert" />
     <None Include="..\res\shaders\triangle.frag" />
     <None Include="..\res\shaders\triangle.vert" />
     <None Include="..\res\shaders\writePipeline.frag" />

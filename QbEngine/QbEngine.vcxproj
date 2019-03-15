@@ -188,6 +188,7 @@
     <ClCompile Include="engine\device.cpp" />
     <ClCompile Include="engine\dynamicStructMgr.cpp" />
     <ClCompile Include="engine\eventMgr.cpp" />
+    <ClCompile Include="engine\fileMgr.cpp" />
     <ClCompile Include="engine\fontMgr.cpp" />
     <ClCompile Include="engine\inputMgr.cpp" />
     <ClCompile Include="engine\inst.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="engine\device.h" />
     <ClInclude Include="engine\dynamicStructMgr.h" />
     <ClInclude Include="engine\eventMgr.h" />
+    <ClInclude Include="engine\fileMgr.h" />
     <ClInclude Include="engine\fontMgr.h" />
     <ClInclude Include="engine\inputMgr.h" />
     <ClInclude Include="engine\inst.h" />

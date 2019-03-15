@@ -36,18 +36,45 @@ void qb::RenderPass::init(App * app, std::string name) {
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 	this->attachmentDescs.push_back(colorAttachment);
+	VkAttachmentDescription depthAttachment = {};
+	depthAttachment.format = app->device.depthFormat;
+	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	this->attachmentDescs.push_back(depthAttachment);
 	// attachment ref
 	VkAttachmentReference colorAttachmentRef = {};
 	colorAttachmentRef.attachment = 0;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	this->attachmentRefs = { {} };
 	this->attachmentRefs[0].push_back(colorAttachmentRef);
+	VkAttachmentReference depthAttachmentRef = {};
+	depthAttachmentRef.attachment = 1;
+	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	this->attachmentRefs[0].push_back(depthAttachmentRef);
 	// sub pass
 	VkSubpassDescription subpass = {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &this->attachmentRefs[0][0];
+	subpass.pDepthStencilAttachment = &this->attachmentRefs[0][1];
 	this->subpassDescs.push_back(subpass);
+
+	// dependency
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	this->dependencies.push_back(dependency);
+
 }
 
 void qb::RenderPass::build() {
@@ -64,24 +91,31 @@ void qb::RenderPass::build() {
 	vk_check(vkCreateRenderPass(app->device.logical, &renderPassInfo, nullptr, &renderPass));
 }
 
-void qb::RenderPass::begin(size_t i){
+void qb::RenderPass::begin(size_t i, VkCommandBuffer* cmdBuf){
 	VkRenderPassBeginInfo renderPassBeginInfo = {};
 	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassBeginInfo.renderPass = renderPass;
-	assert(framebuffers != nullptr);
-	renderPassBeginInfo.framebuffer = (*framebuffers)[i];
+	assert(framebuffer != nullptr);
+	renderPassBeginInfo.framebuffer = framebuffer->framebuffers[i];
 	renderPassBeginInfo.renderArea.offset = { 0, 0 };
-	renderPassBeginInfo.renderArea.extent = app->swapchain.extent;
+	renderPassBeginInfo.renderArea.extent = { framebuffer->createInfo.width, framebuffer->createInfo.height };
 
 	assert(this->clearValues.size() == renderPassInfo.attachmentCount);
 	renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(this->clearValues.size());
 	renderPassBeginInfo.pClearValues = this->clearValues.data();
 
-	vkCmdBeginRenderPass(app->bufferMgr.commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+	if (cmdBuf == nullptr) {
+		cmdBuf = &app->bufferMgr.commandBuffers[i];
+	}
+
+	vkCmdBeginRenderPass(*cmdBuf, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void qb::RenderPass::end(size_t i){
-	vkCmdEndRenderPass(app->bufferMgr.commandBuffers[i]);
+void qb::RenderPass::end(size_t i, VkCommandBuffer* cmdBuf){
+	if (cmdBuf == nullptr) {
+		cmdBuf = &app->bufferMgr.commandBuffers[i];
+	}
+	vkCmdEndRenderPass(*cmdBuf);
 }
 
 void qb::RenderPass::destroy() {

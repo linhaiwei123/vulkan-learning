@@ -29,6 +29,9 @@
     <ClInclude Include="src\Triangle.hpp">
       <Filter>Source Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Pbr.hpp">
+      <Filter>Source Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\shaders\compute.comp">
@@ -50,6 +53,27 @@
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\res\shaders\fontPipeline.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\pbr.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\pbr.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\filterCube.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\prefilterEnvmap.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\irradianceCube.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\genBrdfLut.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\genBrdfLut.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

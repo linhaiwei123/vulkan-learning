@@ -37,14 +37,14 @@ namespace qb {
 		std::vector<VkSubpassDescription> subpassDescs{};
 		std::vector<VkClearValue> clearValues{};
 		std::vector<VkSubpassDependency> dependencies{};
-		std::vector<VkFramebuffer>* framebuffers = nullptr;
+		qb::FrameBuffer* framebuffer = nullptr;
 	public:
 		RenderPass() = default;
 		
 		void init(App* app, std::string name);
 		void build();
-		void begin(size_t i);
-		void end(size_t i);
+		void begin(size_t i, VkCommandBuffer* cmdBuf = nullptr);
+		void end(size_t i, VkCommandBuffer* cmdBuf = nullptr);
 		void destroy();
 	};
 };

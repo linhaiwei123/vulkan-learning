@@ -3,7 +3,7 @@
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
-#define TINYGLTF_NO_STB_IMAGE
+#define STB_IMAGE_IMPLEMENTATION
 #define STBI_MSC_SECURE_CRT
 #include <tiny_gltf.h>
 
@@ -15,8 +15,13 @@ tinygltf::Model * qb::ModelMgr::getGltf(const std::string name){
 	std::string err;
 	std::string warn;
 	tinygltf::Model* model = new tinygltf::Model();
+	bool binary = false;
+	size_t extpos = name.rfind('.', name.length());
+	if (extpos != std::string::npos) {
+		binary = (name.substr(extpos + 1, name.length() - extpos) == "glb");
+	}
 	auto path = get_asset_full_path(name);
-	bool ret = _loader.LoadASCIIFromFile(model, &err, &warn, path);
+	bool ret = binary ? _loader.LoadBinaryFromFile(model, &err, &warn, path) : _loader.LoadASCIIFromFile(model, &err, &warn, path);
 	if (!warn.empty()) {
 		log_warn("%s", warn.c_str());
 	}
@@ -41,12 +46,31 @@ qb::Model * qb::ModelMgr::getModel(const std::string name) {
 }
 void qb::ModelMgr::init(App *app) {
 	this->app = app;
-	// init descriptor desc
-	this->descriptorDesc = app->descriptorMgr.getDescriptorDesc("$modelDescriptorDesc");
-	this->descriptorDesc->bindings = {
-		descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT)
+	// init mesh descriptor desc
+	this->meshDescriptorDesc = app->descriptorMgr.getDescriptorDesc("$modelMeshDescriptorDesc");
+	this->meshDescriptorDesc->bindings = {
+		descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
 	};
-	this->descriptorDesc->build();
+	this->meshDescriptorDesc->build();
+	// init material descriptor desc
+	this->materialDescriptorDesc = app->descriptorMgr.getDescriptorDesc("$modelMaterialDescriptorDesc");
+	this->materialDescriptorDesc->bindings = {
+		descriptor_layout_binding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		descriptor_layout_binding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		descriptor_layout_binding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		descriptor_layout_binding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		descriptor_layout_binding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+		descriptor_layout_binding(5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT),
+	};	
+	this->materialDescriptorDesc->build();
+	// empty img for default pbr tex
+	this->emptyImg = app->bufferMgr.getImage("$modelMgr/emptyImg");
+	this->emptyImg->tex = app->bufferMgr.getTex("textures/empty.ktx");
+	this->emptyImg->imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT;
+	this->emptyImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	this->emptyImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	this->emptyImg->build();
+	this->emptyImg->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
 }
 
 
@@ -127,6 +151,13 @@ void qb::Model::_loadNode(qb::Model::Node * parent, const tinygltf::Node & node,
 					bufferNormals = reinterpret_cast<const float*>(&(gltf->buffers[normalView.buffer].data[normalAccessor.byteOffset + normalView.byteOffset]));
 				}
 
+				// texCoord
+				if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end()) {
+					const tinygltf::Accessor &uvAccessor = gltf->accessors[primitive.attributes.find("TEXCOORD_0")->second];
+					const tinygltf::BufferView &uvView = gltf->bufferViews[uvAccessor.bufferView];
+					bufferTexCoords = reinterpret_cast<const float *>(&(gltf->buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
+				}
+
 				// skinning
 				// joints
 				if (primitive.attributes.find("JOINTS_0") != primitive.attributes.end()) {
@@ -142,14 +173,16 @@ void qb::Model::_loadNode(qb::Model::Node * parent, const tinygltf::Node & node,
 					bufferWeights = reinterpret_cast<const float*>(&(gltf->buffers[weightView.buffer].data[weightAccessor.byteOffset + weightView.byteOffset]));
 				}
 
+
+
 				hasSkin = (bufferJoints && bufferWeights);
 
 				for (size_t v = 0; v < posAccessor.count; v++) {
 					Vertex vertex{};
 					vertex.pos = glm::make_vec3(&bufferPos[v * 3]);
 					vertex.normal = bufferNormals ? glm::normalize(glm::make_vec3(&bufferNormals[v * 3])) : glm::vec3(0.0f);
-					vertex.texCoord = bufferTexCoords ? glm::make_vec2(&bufferTexCoords[v * 2]) : glm::vec3(0.0f);
-					vertex.joint0 = hasSkin ? glm::u16vec4(glm::make_vec4(&bufferJoints[v * 4])) : glm::u16vec4(0u);
+					vertex.texCoord = bufferTexCoords ? glm::make_vec2(&bufferTexCoords[v * 2]) : glm::vec2(0.0f);
+					vertex.joint0 = hasSkin ? glm::u16vec4(glm::make_vec4(&bufferJoints[v * 4])) : glm::u16vec4(0);
 					vertex.weight0 = hasSkin ? glm::make_vec4(&bufferWeights[v * 4]) : glm::vec4(0.0f);
 					vertices.push_back(vertex);
 				}
@@ -191,7 +224,7 @@ void qb::Model::_loadNode(qb::Model::Node * parent, const tinygltf::Node & node,
 				}
 			}
 
-			Primitive* newPrimitive = new Primitive(indexStart, indexCount);
+			Primitive* newPrimitive = new Primitive(indexStart, indexCount, primitive.material > -1 ? materials[primitive.material] : materials.back());
 			newMesh->primitives.push_back(newPrimitive);
 		}
 		newNode->mesh = newMesh;
@@ -236,7 +269,45 @@ void qb::Model::_loadSkins(){
 }
 
 void qb::Model::_loadImages(){
-	// todo
+	uint32_t index = 0;
+	for (tinygltf::Texture & tex : gltf->textures) {
+		tinygltf::Image image = gltf->images[tex.source];
+		if (image.name.length() == 0) {
+			image.name = image.uri;
+		}
+		qb::Image* newImage = app->bufferMgr.getImage(this->name + "/" + image.name);
+		newImage->imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		newImage->imageInfo.format = image.component == 3? VK_FORMAT_R8G8B8_UNORM: VK_FORMAT_R8G8B8A8_UNORM;
+		newImage->imageInfo.extent = {
+			static_cast<uint32_t>(image.width),
+			static_cast<uint32_t>(image.height),
+			static_cast<uint32_t>(1),
+		};
+		newImage->imageInfo.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		newImage->viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		newImage->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		newImage->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		//uint32_t mipLevels = get_mips(std::max(image.width, image.height));
+		uint32_t mipLevels = 1;
+		newImage->imageInfo.mipLevels = mipLevels;
+		newImage->viewInfo.subresourceRange.levelCount = mipLevels;
+		newImage->samplerInfo.maxLod = static_cast<float>(mipLevels);
+		if (tex.sampler != -1) {
+			tinygltf::Sampler& sam = gltf->samplers[tex.sampler];
+			newImage->samplerInfo.minFilter = getVkFilterMode(sam.minFilter);
+			newImage->samplerInfo.magFilter = getVkFilterMode(sam.magFilter);
+			newImage->samplerInfo.addressModeU = getVkWrapMode(sam.wrapS);
+			newImage->samplerInfo.addressModeU = getVkWrapMode(sam.wrapT);
+			newImage->samplerInfo.addressModeU = getVkWrapMode(sam.wrapS);
+		}
+		newImage->build();
+		size_t size = image.image.size();
+		newImage->mapping(&image.image[0], size);
+
+		newImage->setImageLayout(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		images.push_back(newImage);
+		index++;
+	}
 }
 
 void qb::Model::_loadAnimations(){
@@ -345,6 +416,100 @@ void qb::Model::_loadAnimations(){
 	}
 }
 
+void qb::Model::_loadMaterials() {
+	for (tinygltf::Material &material : gltf->materials) {
+		Model::Material* newMaterial = new Model::Material{};
+		newMaterial->setDefaultTexture(app->modelMgr.emptyImg);
+		if (material.extensions.find("KHR_materials_pbrSpecularGlossiness") != material.extensions.end()) {
+			newMaterial->uniform.workflow = static_cast<float>(Model::Material::PBR_WORKFLOW_SPECULAR_GLOSINESS);
+			auto ext = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
+			if (ext->second.Has("specularGlossinessTexture")) {
+				auto index = ext->second.Get("specularGlossinessTexture").Get("index");
+				newMaterial->extension.specularGlossinessTexture = images[index.Get<int>()];
+				auto texCoordSet = ext->second.Get("specularGlossinessTexture").Get("texCoord");
+				//newMaterial->texCoordSets.specularGlossiness = texCoordSet.Get<int>();
+				newMaterial->uniform.hasPhysicalDescriptorTexture = 1.0f;
+			}
+			if (ext->second.Has("diffuseTexture")) {
+				auto index = ext->second.Get("diffuseTexture").Get("index");
+				newMaterial->extension.diffuseTexture = images[index.Get<int>()];
+				newMaterial->uniform.hasBaseColorTexture =1.0f;
+			}
+			if (ext->second.Has("diffuseFactor")) {
+				auto factor = ext->second.Get("diffuseFactor");
+				for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
+					auto val = factor.Get(i);
+					newMaterial->uniform.diffuseFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
+				}
+			}
+			if (ext->second.Has("specularFactor")) {
+				auto factor = ext->second.Get("specularFactor");
+				for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
+					auto val = factor.Get(i);
+					newMaterial->uniform.specularFactor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
+				}
+			}
+		}
+		else {
+			newMaterial->uniform.workflow = static_cast<float>(Model::Material::PBR_WORKFLOW_METALLIC_ROUGHNESS);
+			if (material.values.find("baseColorTexture") != material.values.end()) {
+				newMaterial->uniform.hasBaseColorTexture =1.0f;
+				newMaterial->baseColorTexture = images[material.values["baseColorTexture"].TextureIndex()];
+				//newMaterial->texCoordSets.baseColor = material.values["baseColorTexture"].TextureTexCoord();
+			}
+			if (material.values.find("metallicRoughnessTexture") != material.values.end()) {
+				newMaterial->uniform.hasPhysicalDescriptorTexture =1.0f;
+				newMaterial->metallicRoughnessTexture = images[material.values["metallicRoughnessTexture"].TextureIndex()];
+				//newMaterial->texCoordSets.metallicRoughness = material.values["metallicRoughnessTexture"].TextureTexCoord();
+			}
+			if (material.values.find("roughnessFactor") != material.values.end()) {
+			}
+			if (material.values.find("metallicFactor") != material.values.end()) {
+				newMaterial->uniform.metallicFactor = static_cast<float>(material.values["metallicFactor"].Factor());
+			}
+			if (material.values.find("baseColorFactor") != material.values.end()) {
+				newMaterial->uniform.baseColorFactor = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
+			}
+			if (material.additionalValues.find("normalTexture") != material.additionalValues.end()) {
+				newMaterial->uniform.hasNormalTexture =1.0f;
+				newMaterial->normalTexture = images[material.additionalValues["normalTexture"].TextureIndex()];
+				//newMaterial->texCoordSets.normal = material.additionalValues["normalTexture"].TextureTexCoord();
+			}
+			if (material.additionalValues.find("emissiveTexture") != material.additionalValues.end()) {
+				newMaterial->uniform.hasEmissiveTexture =1.0f;
+				newMaterial->emissiveTexture = images[material.additionalValues["emissiveTexture"].TextureIndex()];
+				//newMaterial->texCoordSets.emissive = material.additionalValues["emissiveTexture"].TextureTexCoord();
+			}
+			if (material.additionalValues.find("occlusionTexture") != material.additionalValues.end()) {
+				newMaterial->uniform.hasOcclusionTexture =1.0f;
+				newMaterial->occlusionTexture = images[material.additionalValues["occlusionTexture"].TextureIndex()];
+				//newMaterial->texCoordSets.occlusion = material.additionalValues["occlusionTexture"].TextureTexCoord();
+			}
+			if (material.additionalValues.find("alphaMode") != material.additionalValues.end()) {
+				tinygltf::Parameter param = material.additionalValues["alphaMode"];
+				if (param.string_value == "BLEND") {
+					newMaterial->alphaMode = Material::ALPHAMODE_BLEND;
+				}
+				if (param.string_value == "MASK") {
+					newMaterial->uniform.alphaMask =1.0f;
+					newMaterial->uniform.alphaMaskCutoff = 0.5f;
+					newMaterial->alphaMode = Material::ALPHAMODE_MASK;
+				}
+			}
+			if (material.additionalValues.find("alphaCutoff") != material.additionalValues.end()) {
+				newMaterial->uniform.alphaMaskCutoff = static_cast<float>(material.additionalValues["alphaCutoff"].Factor());
+			}
+			if (material.additionalValues.find("emissiveFactor") != material.additionalValues.end()) {
+				newMaterial->uniform.emissiveFactor = glm::make_vec3(material.additionalValues["emissiveFactor"].ColorFactor().data());
+			}
+		}
+		materials.push_back(newMaterial);
+	}
+	auto defaultMaterial = new Model::Material();
+	defaultMaterial->setDefaultTexture(app->modelMgr.emptyImg);
+	materials.push_back(defaultMaterial);
+}
+
 qb::Model::Node * qb::Model::_findNode(qb::Model::Node * parent, uint32_t index){
 
 	qb::Model::Node* nodeFound = nullptr;
@@ -376,6 +541,38 @@ qb::Model::Node * qb::Model::_nodeFromIndex(uint32_t index){
 	return nodeFound;
 }
 
+VkSamplerAddressMode qb::Model::getVkWrapMode(int32_t wrapMode) {
+	switch (wrapMode) {
+	case 10497:
+		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	case 33071:
+		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	case 33648:
+		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+	}
+	assert(0);
+	return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+}
+
+VkFilter qb::Model::getVkFilterMode(int32_t filterMode) {
+	switch (filterMode) {
+	case 9728:
+		return VK_FILTER_NEAREST;
+	case 9729:
+		return VK_FILTER_LINEAR;
+	case 9984:
+		return VK_FILTER_NEAREST;
+	case 9985:
+		return VK_FILTER_NEAREST;
+	case 9986:
+		return VK_FILTER_LINEAR;
+	case 9987:
+		return VK_FILTER_LINEAR;
+	}
+	assert(0);
+	return VK_FILTER_MAX_ENUM;
+}
+
 void qb::Model::setAnimation(std::string name){
 	auto it = animMap.find(name);
 	if (it == animMap.end()) {
@@ -385,48 +582,54 @@ void qb::Model::setAnimation(std::string name){
 }
 
 void qb::Model::updateAnimation(float time){
-	assert(currAnimaiton != nullptr);
-	time = fmod(time, currAnimaiton->end - currAnimaiton->start);
+	//assert(currAnimaiton != nullptr);
 
 	bool updated = false;
-	for (auto& channel : currAnimaiton->channels) {
-		qb::Model::AnimationSampler &sampler = currAnimaiton->samplers[channel.samplerIndex];
-		if (sampler.inputs.size() > sampler.outputsVec4.size()) {
-			continue;
-		}
 
-		for (size_t i = 0; i < sampler.inputs.size() - 1; i++) {
-			if ((time >= sampler.inputs[i]) && (time <= sampler.inputs[i + 1])) {
-				float u = std::max(0.0f, time - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+	if (currAnimaiton == nullptr) {
+		updated = true;
+	}
+	else {
+		time = fmod(time, currAnimaiton->end - currAnimaiton->start);
+		for (auto& channel : currAnimaiton->channels) {
+			qb::Model::AnimationSampler &sampler = currAnimaiton->samplers[channel.samplerIndex];
+			if (sampler.inputs.size() > sampler.outputsVec4.size()) {
+				continue;
+			}
 
-				if (u <= 1.0f) {
-					switch (channel.path) {
-					case qb::Model::AnimationChannel::PathType::TRANSLATION: {
-						glm::vec4 trans = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
-						channel.node->translation = glm::vec3(trans);
-						break;
+			for (size_t i = 0; i < sampler.inputs.size() - 1; i++) {
+				if ((time >= sampler.inputs[i]) && (time <= sampler.inputs[i + 1])) {
+					float u = std::max(0.0f, time - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+
+					if (u <= 1.0f) {
+						switch (channel.path) {
+						case qb::Model::AnimationChannel::PathType::TRANSLATION: {
+							glm::vec4 trans = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
+							channel.node->translation = glm::vec3(trans);
+							break;
+						}
+						case qb::Model::AnimationChannel::PathType::SCALE: {
+							glm::vec4 scale = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
+							channel.node->scale = glm::vec3(scale);
+							break;
+						}
+						case qb::Model::AnimationChannel::PathType::ROTATION: {
+							glm::quat q1;
+							q1.x = sampler.outputsVec4[i].x;
+							q1.y = sampler.outputsVec4[i].y;
+							q1.z = sampler.outputsVec4[i].z;
+							q1.w = sampler.outputsVec4[i].w;
+							glm::quat q2;
+							q2.x = sampler.outputsVec4[i + 1].x;
+							q2.y = sampler.outputsVec4[i + 1].y;
+							q2.z = sampler.outputsVec4[i + 1].z;
+							q2.w = sampler.outputsVec4[i + 1].w;
+							channel.node->rotation = glm::normalize(glm::slerp(q1, q2, u));
+							break;
+						}
+						}
+						updated = true;
 					}
-					case qb::Model::AnimationChannel::PathType::SCALE: {
-						glm::vec4 scale = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
-						channel.node->scale = glm::vec3(scale);
-						break;
-					}
-					case qb::Model::AnimationChannel::PathType::ROTATION: {
-						glm::quat q1;
-						q1.x = sampler.outputsVec4[i].x;
-						q1.y = sampler.outputsVec4[i].y;
-						q1.z = sampler.outputsVec4[i].z;
-						q1.w = sampler.outputsVec4[i].w;
-						glm::quat q2;
-						q2.x = sampler.outputsVec4[i + 1].x;
-						q2.y = sampler.outputsVec4[i + 1].y;
-						q2.z = sampler.outputsVec4[i + 1].z;
-						q2.w = sampler.outputsVec4[i + 1].w;
-						channel.node->rotation = glm::normalize(glm::slerp(q1, q2, u));
-						break;
-					}
-					}
-					updated = true;
 				}
 			}
 		}
@@ -450,6 +653,7 @@ void qb::Model::destroy(){
 		auto& mesh = node->mesh;
 		if (mesh != nullptr) {
 			for (auto& primitive : mesh->primitives) {
+				primitive->material = nullptr;
 				delete primitive;
 			}
 		}
@@ -462,12 +666,16 @@ void qb::Model::destroy(){
 
 		delete node;
 	}
+
+	for (auto& material : materials) {
+		delete material;
+	}
 }
 
 void qb::Model::build(){
 	assert(gltf != nullptr);
 	_loadImages();
-	//todo load material
+	_loadMaterials();
 
 	rootNode = new Node();
 	rootNode->name = "$root";
@@ -515,13 +723,39 @@ void qb::Model::build(){
 			// descriptor set
 			std::string descriptorName = "$descriptor_" + uniqueName;
 			Descriptor* descriptor = app->descriptorMgr.getDescriptor(descriptorName);
-			descriptor->desc = app->modelMgr.descriptorDesc;
+			descriptor->desc = app->modelMgr.meshDescriptorDesc;
 			descriptor->datas = {
-				uniBuf
+				uniBuf,
 			};
 			descriptor->buildPerSwapchainImg();
 			node->mesh->descriptor = descriptor;
 			linearMeshes.push_back(node->mesh);
+
+			
+
+			// material descriptor set
+			for (size_t i = 0; i < node->mesh->primitives.size(); i++) {
+				auto& primitive = node->mesh->primitives[i];
+				Buffer* uniBuf = app->bufferMgr.getBuffer(descriptorName + "/primitiveMaterialParam" + std::to_string(i));
+				uniBuf->bufferInfo.size = sizeof(qb::Model::Material::Uniform);
+				uniBuf->bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+				uniBuf->descriptorRange = sizeof(qb::Model::Material::Uniform);
+				uniBuf->buildPerSwapchainImg();
+				primitive->material->uniBuf = uniBuf;
+				std::string materialDescriptorName = descriptorName + "/primitiveMaterial" + std::to_string(i);
+				Descriptor* materialDescriptor = app->descriptorMgr.getDescriptor(materialDescriptorName);
+				materialDescriptor->desc = app->modelMgr.materialDescriptorDesc;
+				materialDescriptor->datas = {
+					primitive->material->uniBuf,
+					primitive->material->uniform.workflow == static_cast<float>(Model::Material::PBR_WORKFLOW_METALLIC_ROUGHNESS) ? primitive->material->baseColorTexture:primitive->material->extension.diffuseTexture,
+					primitive->material->uniform.workflow == static_cast<float>(Model::Material::PBR_WORKFLOW_METALLIC_ROUGHNESS) ? primitive->material->metallicRoughnessTexture:primitive->material->extension.specularGlossinessTexture,
+					primitive->material->normalTexture,
+					primitive->material->occlusionTexture,
+					primitive->material->emissiveTexture
+				};
+				materialDescriptor->buildPerSwapchainImg();
+				primitive->descriptor = materialDescriptor;
+			}
 
 			// update mesh
 			if (node->mesh) {
@@ -574,10 +808,14 @@ void qb::Model::Node::update() {
 				jointMat = inverseTransform * jointMat;
 				mesh->uniform.joinMat[i] = jointMat;
 			}
+			mesh->uniform.jointCount = static_cast<uint32_t>(numJoints);
 			mesh->uniBuf->mappingCurSwapchainImg(&mesh->uniform);
 		}
 		else {
 			mesh->uniBuf->mappingCurSwapchainImg(&mesh->uniform.mat, offsetof(qb::Model::Mesh::Uniform, mat), sizeof(mesh->uniform.mat));
+		}
+		for (qb::Model::Primitive* primitive : mesh->primitives) {
+			primitive->material->uniBuf->mappingCurSwapchainImg(&primitive->material->uniform);
 		}
 	}
 	for (auto& child : children) {

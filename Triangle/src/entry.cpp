@@ -1,7 +1,8 @@
-#include "./triangle.hpp"
-
+//#include "./triangle.hpp"
+#include "Pbr.hpp"
 int main() {
-	Triangle app;
+	//Triangle app;
+	Pbr app;
 	try {
 		app.run();
 	}

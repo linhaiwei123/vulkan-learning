@@ -25,6 +25,18 @@ void qb::BufferMgr::init(App * app) {
 		vk_check(vkAllocateCommandBuffers(app->device.logical, &allocInfo, commandBuffers.data()));
 		this->_commandBufferDirtyNum = app->swapchain.views.size();
 	}
+	// default depth img 
+	{
+		defaultDepthImg = app->bufferMgr.getImage("depthImg");
+		defaultDepthImg->imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		defaultDepthImg->imageInfo.format = app->device.depthFormat;
+		defaultDepthImg->imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		defaultDepthImg->viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		defaultDepthImg->viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+		defaultDepthImg->descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		defaultDepthImg->build();
+		defaultDepthImg->setImageLayout(VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT);
+	}
 }
 
 void qb::BufferMgr::update() {
@@ -234,18 +246,18 @@ VkCommandBuffer qb::BufferMgr::beginOnce() {
 	return std::forward<VkCommandBuffer>(cmdBuf);
 }
 
-void qb::BufferMgr::endOnce(VkCommandBuffer cmdBuf) {
-	vkEndCommandBuffer(cmdBuf);
+void qb::BufferMgr::endOnce(VkCommandBuffer* cmdBuf) {
+	vkEndCommandBuffer(*cmdBuf);
 
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &cmdBuf;
+	submitInfo.pCommandBuffers = cmdBuf;
 
 	vkQueueSubmit(app->device.queues.graphics, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(app->device.queues.graphics);
 
-	vkFreeCommandBuffers(app->device.logical, app->bufferMgr.commandPool, 1, &cmdBuf);
+	vkFreeCommandBuffers(app->device.logical, app->bufferMgr.commandPool, 1, cmdBuf);
 }
 
 void qb::Buffer::copyToImage(qb::Image * img){
@@ -272,7 +284,7 @@ void qb::Buffer::copyToImage(qb::Image * img){
 	VkCommandBuffer cmdBuf = this->app->bufferMgr.beginOnce();
 	img->setImageLayout(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, cmdBuf);
 	vkCmdCopyBufferToImage(cmdBuf, this->buffer(), img->image, img->getImageLayout(), static_cast<uint32_t>(bufferCopyRegions.size()), bufferCopyRegions.data());
-	this->app->bufferMgr.endOnce(cmdBuf);
+	this->app->bufferMgr.endOnce(&cmdBuf);
 	// end cmd
 }
 
@@ -296,7 +308,7 @@ void qb::Image::init(App * app, std::string name){
 	imageInfo.usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM; // init outside
 	imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	imageInfo.flags = 0;
+	imageInfo.flags = VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 
 	// view
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -348,6 +360,10 @@ void qb::Image::build() {
 		imageInfo.arrayLayers = static_cast<uint32_t>(tex->layers());
 		imageInfo.format = static_cast<VkFormat>(tex->format());
 		imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		if (gli::is_target_cube(tex->target())) {
+			imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+			imageInfo.arrayLayers = std::max(6u, imageInfo.arrayLayers);
+		}
 
 		// view
 		viewInfo.viewType = _getImageViewTypeFromTex();
@@ -520,7 +536,7 @@ void qb::Image::setImageLayout(VkImageLayout layout, VkPipelineStageFlagBits src
 		cmdBuf = this->app->bufferMgr.beginOnce();
 	this->app->sync.setImageLayout(cmdBuf, this, _imgLayout, layout, srcStage, dstStage);
 	if (cmdBufNotExist)
-		this->app->bufferMgr.endOnce(cmdBuf);
+		this->app->bufferMgr.endOnce(&cmdBuf);
 	_imgLayout = layout;
 }
 
@@ -531,6 +547,10 @@ VkImageLayout qb::Image::getImageLayout(){
 void qb::FrameBuffer::init(App * app, std::string name){
 	this->app = app;
 	this->name = name;
+	createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	createInfo.width = app->swapchain.extent.width;
+	createInfo.height = app->swapchain.extent.height;
+	createInfo.layers = 1;
 }
 
 void qb::FrameBuffer::build(){
@@ -542,14 +562,14 @@ void qb::FrameBuffer::build(){
 		assert(onAttachments != nullptr);
 		std::vector<VkImageView> attachments = onAttachments(i);
 		assert(attachments.size() != 0);
-		VkFramebufferCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		//VkFramebufferCreateInfo createInfo = {};
+		//createInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		createInfo.renderPass = renderPass;
 		createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 		createInfo.pAttachments = attachments.data();
-		createInfo.width = app->swapchain.extent.width;
-		createInfo.height = app->swapchain.extent.height;
-		createInfo.layers = 1;
+		//createInfo.width = app->swapchain.extent.width;
+		//createInfo.height = app->swapchain.extent.height;
+		//createInfo.layers = 1;
 
 		vk_check(vkCreateFramebuffer(app->device.logical, &createInfo, nullptr, &framebuffers[i]));
 	}

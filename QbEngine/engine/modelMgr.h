@@ -13,7 +13,6 @@
 #include <array>
 
 #define TINYGLTF_NO_STB_IMAGE_WRITE
-#define TINYGLTF_NO_STB_IMAGE
 #define STBI_MSC_SECURE_CRT
 #include <tiny_gltf.h>
 
@@ -30,8 +29,10 @@ namespace qb {
 		std::unordered_map<std::string, tinygltf::Model*> _gltfMap{};
 		tinygltf::TinyGLTF _loader;
 	public:
+		qb::Image* emptyImg;
 		App *app;
-		DescriptorDesc* descriptorDesc;
+		DescriptorDesc* meshDescriptorDesc;
+		DescriptorDesc* materialDescriptorDesc;
 	public:
 		ModelMgr() = default;
 		tinygltf::Model* getGltf(const std::string name);
@@ -49,10 +50,56 @@ namespace qb {
 	public: // gltf
 		struct Node;
 
+		struct Material {
+			enum AlphaMode {ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND};
+			enum PBRWorkflows { PBR_WORKFLOW_METALLIC_ROUGHNESS = 0, PBR_WORKFLOW_SPECULAR_GLOSINESS = 1 };
+			AlphaMode alphaMode = ALPHAMODE_OPAQUE;
+			qb::Image* baseColorTexture;
+			qb::Image* metallicRoughnessTexture;
+			qb::Image* normalTexture;
+			qb::Image* occlusionTexture;
+			qb::Image* emissiveTexture;
+			struct Extentsion {
+				qb::Image* specularGlossinessTexture;
+				qb::Image* diffuseTexture;
+			} extension;
+			
+			void setDefaultTexture(qb::Image* defaultTex) {
+				this->baseColorTexture = defaultTex;
+				this->metallicRoughnessTexture = defaultTex;
+				this->normalTexture = defaultTex;
+				this->occlusionTexture = defaultTex;
+				this->emissiveTexture = defaultTex;
+				this->extension.specularGlossinessTexture = defaultTex;
+				this->extension.diffuseTexture = defaultTex;
+			}
+
+			struct Uniform {
+				glm::vec4 baseColorFactor;
+				glm::vec3 emissiveFactor;
+				float workflow = static_cast<float>(PBR_WORKFLOW_METALLIC_ROUGHNESS);
+				glm::vec4 diffuseFactor;
+				glm::vec4 specularFactor;
+				float hasBaseColorTexture = 0.0f;
+				float hasPhysicalDescriptorTexture = 0.0f;
+				float hasNormalTexture = 0.0f;
+				float hasOcclusionTexture = 0.0f;
+				float hasEmissiveTexture = 0.0f;
+				float metallicFactor;
+				float roughnessFactor;
+				float alphaMask = 0.0f;
+				float alphaMaskCutoff = 1.0f;
+			} uniform;
+
+			qb::Buffer* uniBuf;
+		};
+
 		struct Primitive {
 			uint32_t firstIndex;
 			uint32_t indexCount;
-			Primitive(uint32_t firstIndex, uint32_t indexCount) :firstIndex(firstIndex), indexCount(indexCount) {};
+			Material* material;
+			qb::Descriptor* descriptor;
+			Primitive(uint32_t firstIndex, uint32_t indexCount, Material* material) :firstIndex(firstIndex), indexCount(indexCount), material(material) {};
 		};
 
 		struct Mesh {
@@ -62,6 +109,7 @@ namespace qb {
 			struct Uniform {
 				glm::mat4 mat;
 				glm::mat4 joinMat[max_bones_per_mesh]{};
+				uint32_t jointCount = 0u;
 			} uniform;
 
 			qb::Buffer* uniBuf;
@@ -136,11 +184,10 @@ namespace qb {
 		Buffer* indexBuf;
 		std::vector<uint32_t> indices{};
 		std::vector <qb::Model::Vertex> vertices{};
-		//std::vector<Node*> nodes{};
 		std::vector<Node*> linearNodes{};
 		std::vector<Skin*> skins{};
 		std::vector<qb::Image*> images{};
-		//todo material
+		std::vector<Material*> materials{};
 		std::vector<Animation> animations{};
 		std::vector<std::string> extensions{};
 
@@ -154,8 +201,11 @@ namespace qb {
 		void _loadSkins();
 		void _loadImages();
 		void _loadAnimations();
+		void _loadMaterials();
 		Node* _findNode(qb::Model::Node* parent, uint32_t index);
 		Node* _nodeFromIndex(uint32_t index);
+		VkSamplerAddressMode getVkWrapMode(int32_t wrapMode);
+		VkFilter getVkFilterMode(int32_t filterMode);
 	public:
 		void setAnimation(std::string name);
 		void updateAnimation(float time);

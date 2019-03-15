@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <chrono>
 #include <gli/gli.hpp>
+#include "json.hpp"
 #include "win.h"
 #include "inst.h"
 #include "surface.h"
@@ -35,6 +36,7 @@
 #include "sceneMgr.h"
 #include "timerMgr.h"
 #include "dynamicStructMgr.h"
+#include "fileMgr.h"
 
 namespace qb {
 	class App {
@@ -59,6 +61,7 @@ namespace qb {
 		SceneMgr sceneMgr;
 		TimerMgr timerMgr;
 		DynamicStructMgr dynamicStructMgr;
+		FileMgr fileMgr;
 	public:
 		App() {};
 		void run();

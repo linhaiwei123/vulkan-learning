@@ -66,3 +66,6 @@ static std::unordered_map <std::string, size_t> size_table{
 	{"glm::mat3", sizeof(glm::mat3)},
 	{"glm::mat4", sizeof(glm::mat4)},
 };
+
+//! mips
+#define get_mips(dim) static_cast<uint32_t>(floor(log2(dim))) + 1
