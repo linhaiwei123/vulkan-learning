@@ -189,7 +189,7 @@ class GpuParticle : public qb::App {
 		compute.uniformBuffer->mapping(&compute.ubo, 0);
 
 		auto cmdBuf = this->bufferMgr.beginOnce();
-		VkBufferMemoryBarrier bufferBarrier = {};
+		/*VkBufferMemoryBarrier bufferBarrier = {};
 		bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
 		bufferBarrier.buffer = compute.storageBuffer->buffer();
 		bufferBarrier.size = compute.storageBuffer->bufferInfo.size;
@@ -204,11 +204,11 @@ class GpuParticle : public qb::App {
 			0,
 			0, nullptr,
 			1, &bufferBarrier,
-			0, nullptr);
+			0, nullptr);*/
 		vkCmdBindPipeline(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipeline->pipeline);
 		vkCmdBindDescriptorSets(cmdBuf, VK_PIPELINE_BIND_POINT_COMPUTE, compute.pipeline->layout, 0, 1, &compute.descriptor->sets(), 0, nullptr);
 		vkCmdDispatch(cmdBuf, PARTICLE_COUNT / 256, 1, 1);
-		bufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;			
+		/*bufferBarrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;			
 		bufferBarrier.dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;	
 		vkCmdPipelineBarrier(
 			cmdBuf,
@@ -217,7 +217,7 @@ class GpuParticle : public qb::App {
 			0,
 			0, nullptr,
 			1, &bufferBarrier,
-			0, nullptr);
+			0, nullptr);*/
 		this->bufferMgr.endOnce(&cmdBuf);
 	};
 	virtual void onDestroy() {
