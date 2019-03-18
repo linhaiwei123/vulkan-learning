@@ -190,7 +190,7 @@ void qb::Buffer::build(size_t count) {
 	}
 
 	if (descriptorRange > 0) {
-		assert(count > 1);
+		assert(count >= 1);
 		//descriptor buffer info
 		descriptorBufferInfos.resize(count);
 		for (size_t i = 0; i < count; i++) {

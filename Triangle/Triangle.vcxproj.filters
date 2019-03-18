@@ -32,6 +32,9 @@
     <ClInclude Include="src\Pbr.hpp">
       <Filter>Source Files\src</Filter>
     </ClInclude>
+    <ClInclude Include="src\GpuParticle.hpp">
+      <Filter>Source Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\res\shaders\compute.comp">
@@ -74,6 +77,15 @@
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\res\shaders\genBrdfLut.frag">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\particle.comp">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\particle.vert">
+      <Filter>Source Files\shaders</Filter>
+    </None>
+    <None Include="..\res\shaders\particle.frag">
       <Filter>Source Files\shaders</Filter>
     </None>
   </ItemGroup>

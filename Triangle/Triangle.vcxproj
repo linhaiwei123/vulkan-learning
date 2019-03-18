@@ -22,6 +22,7 @@
     <ClCompile Include="src\entry.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\GpuParticle.hpp" />
     <ClInclude Include="src\Pbr.hpp" />
     <ClInclude Include="src\Triangle.hpp" />
   </ItemGroup>
@@ -30,6 +31,9 @@
     <None Include="..\res\shaders\genBrdfLut.frag" />
     <None Include="..\res\shaders\genBrdfLut.vert" />
     <None Include="..\res\shaders\irradianceCube.frag" />
+    <None Include="..\res\shaders\particle.comp" />
+    <None Include="..\res\shaders\particle.frag" />
+    <None Include="..\res\shaders\particle.vert" />
     <None Include="..\res\shaders\prefilterEnvmap.frag" />
     <None Include="..\res\shaders\filterCube.vert" />
     <None Include="..\res\shaders\fontPipeline.frag" />

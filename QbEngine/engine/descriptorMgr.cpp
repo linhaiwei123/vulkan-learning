@@ -10,6 +10,7 @@ void qb::DescriptorMgr::init(App *app) {
 		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, descriptorCount},
 		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, descriptorCount},
 		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, descriptorCount},
+		{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, descriptorCount},
 		{VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, descriptorCount},
 		{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, descriptorCount},
 	};

@@ -1,8 +1,10 @@
 //#include "./triangle.hpp"
-#include "Pbr.hpp"
+//#include "./Pbr.hpp"
+#include "./GpuParticle.hpp"
 int main() {
 	//Triangle app;
-	Pbr app;
+	//Pbr app;
+	GpuParticle app;
 	try {
 		app.run();
 	}

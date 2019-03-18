@@ -1,0 +1,58 @@
+#version 450
+
+struct Particle {
+	vec2 pos;
+	vec2 velocity;
+	vec4 gradient;
+};
+
+float random(vec2 co) {
+	float a = 12.9898;
+	float b = 78.233;
+	float c = 43758.5453;
+	float dt = dot(co.xy, vec2(a, b));
+	float sn = mod(dt, 3.14);
+	return fract(sin(sn) * c);
+}
+
+// binding 0 : Position storage buffer  
+layout(std140, binding = 0) buffer Pos {
+	Particle particles[];
+};
+
+layout(local_size_x = 256) in;
+
+layout(binding = 1) uniform UBO {
+	float dt;
+	float x;
+	float y;
+	int particleCount;
+} ubo;
+
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+	if(index >= ubo.particleCount)
+		return;
+
+	vec2 velocity = particles[index].velocity.xy;
+	vec2 pos = particles[index].pos.xy;
+	float gradient = particles[index].gradient.x;
+	
+	vec2 newVelocity = velocity.xy * 0.95;
+	vec2 newPos = pos.xy + velocity.xy * ubo.dt;
+	float newGradient = gradient * 0.95;
+
+	if(length(velocity) < 0.005) {
+		float rand = random(velocity.xy) + 0.1;
+		newVelocity.xy = normalize(velocity.xy) * rand;
+
+		newPos.xy = vec2(ubo.x, ubo.y);
+		newGradient = 1.0f;
+	}
+
+	particles[index].velocity.xy = newVelocity.xy;
+	particles[index].pos.xy = newPos.xy;
+	particles[index].gradient.x = newGradient;
+
+	
+}
